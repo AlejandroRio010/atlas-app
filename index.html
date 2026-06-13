@@ -279,6 +279,16 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div style="display:flex;justify-content:space-between"><span>OBJETIVO</span><span style="color:var(--accent)">78.3 kg</span></div>
 </div>
 </div>
+<div class="card" style="margin-top:16px">
+<div class="modal-title">DATOS</div>
+<div class="modal-sub">Copia de seguridad · Restaurar</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+  <button class="btn btn-secondary" style="flex:1" onclick="exportData()">⬇ Exportar</button>
+  <label class="btn btn-secondary" style="flex:1;text-align:center;cursor:pointer">⬆ Importar<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+</div>
+<div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);margin-top:8px;line-height:1.6">Exportar descarga un .json con todos tus datos. Importar los restaura desde ese fichero.</div>
+</div>
+</div>
 </div>
 
 </div>
@@ -324,14 +334,15 @@ const ROUTINES = {
   futbol: { name: "Fútbol", desc: "Entrenamiento federado", color: "football", type: "football", exercises: [] },
   partido: { name: "Partido", desc: "90 min de fútbol", color: "match", type: "match", exercises: [] },
   descanso: { name: "Descanso", desc: "Recuperación · movilidad ligera", color: "rest", type: "rest", exercises: [] },
-  pierna: { name: "Pierna", desc: "Cuádriceps · Isquios · Glúteos · Explosividad", color: "gym", type: "gym", exercises: [
-    { id: "PIE1", name: "Sentadilla libre o hack squat", sets: 4, reps: "8-10", note: "Base de la potencia y velocidad" },
-    { id: "PIE2", name: "Prensa de piernas", sets: 3, reps: "10-12", note: "" },
-    { id: "PIE3", name: "Curl isquiotibiales tumbado", sets: 4, reps: "10", note: "Prevención de lesiones" },
-    { id: "PIE4", name: "Hip thrust", sets: 4, reps: "10", note: "Potencia de carrera y explosividad" },
-    { id: "PIE5", name: "Extensión cuádriceps máquina", sets: 3, reps: "12", note: "" },
-    { id: "PIE6", name: "Peso muerto rumano con mancuernas", sets: 3, reps: "10", note: "Cadena posterior" },
-    { id: "PIE7", name: "Gemelo en máquina de pie", sets: 4, reps: "15-20", note: "Sprint y salto" }
+  pierna: { name: "Pierna", desc: "Potencia · Isquios · Explosividad · Fibrado", color: "gym", type: "gym", exercises: [
+    { id: "PIE1", name: "Sentadilla libre", sets: 4, reps: "5-8", note: "Fuerza máxima — peso alto, descanso 2-3 min" },
+    { id: "PIE2", name: "Zancada búlgara", sets: 3, reps: "8/lado", note: "Unilateral — potencia + definición" },
+    { id: "PIE3", name: "Peso muerto rumano", sets: 4, reps: "8-10", note: "Isquios y cadena posterior" },
+    { id: "PIE4", name: "Nordic curl", sets: 3, reps: "5-8", note: "Isquios excéntrico — clave para velocidad y prevención" },
+    { id: "PIE5", name: "Hip thrust con barra", sets: 4, reps: "8-10", note: "Potencia glúteo y sprint" },
+    { id: "PIE6", name: "Salto al cajón (box jump)", sets: 4, reps: "5-6", note: "Explosividad pura — máxima altura, no te cansas" },
+    { id: "PIE7", name: "Kettlebell swing", sets: 3, reps: "15-20", note: "Cadena posterior + cardio HIIT" },
+    { id: "PIE8", name: "Gemelo en máquina de pie", sets: 4, reps: "15-20", note: "Sprint y salto" }
   ]},
   cardio: { name: "Cardio", desc: "Carrera · Bici · Actividad libre", color: "cardio", type: "cardio", exercises: [] },
   pachanga: { name: "Pachanga", desc: "Fútbol con amigos · registro libre", color: "football", type: "football", exercises: [] }
@@ -474,26 +485,35 @@ const EXERCISE_LIBRARY = {
     { name:"Plancha lateral", sets:3, reps:"30s/lado", note:"" }
   ]},
   pierna: { label: "Pierna", exercises: [
-    { name:"Sentadilla libre", sets:4, reps:"8-10", note:"Base de la potencia" },
+    { name:"Sentadilla libre", sets:4, reps:"5-8", note:"Fuerza máxima — peso alto" },
     { name:"Hack squat", sets:4, reps:"10", note:"" },
+    { name:"Zancada búlgara", sets:3, reps:"8/lado", note:"Unilateral — potencia + definición" },
     { name:"Prensa de piernas", sets:3, reps:"10-12", note:"" },
     { name:"Extensión cuádriceps máquina", sets:3, reps:"12", note:"" },
     { name:"Curl isquiotibiales tumbado", sets:4, reps:"10", note:"Prevención de lesiones" },
-    { name:"Hip thrust", sets:4, reps:"10", note:"Potencia de carrera" },
-    { name:"Peso muerto rumano con mancuernas", sets:3, reps:"10", note:"Cadena posterior" },
-    { name:"Zancadas con mancuernas", sets:3, reps:"12/lado", note:"Propiocepción y agilidad" },
+    { name:"Nordic curl", sets:3, reps:"5-8", note:"Isquios excéntrico — clave para velocidad" },
+    { name:"Hip thrust con barra", sets:4, reps:"8-10", note:"Potencia glúteo y sprint" },
+    { name:"Peso muerto rumano", sets:4, reps:"8-10", note:"Cadena posterior" },
+    { name:"Kettlebell swing", sets:3, reps:"15-20", note:"Potencia explosiva + cardio" },
+    { name:"Salto al cajón (box jump)", sets:4, reps:"5-6", note:"Explosividad pura" },
+    { name:"Sentadilla con salto (jump squat)", sets:4, reps:"8", note:"Potencia + fibrado" },
+    { name:"Step-up con salto", sets:3, reps:"8/lado", note:"Unilateral explosivo" },
     { name:"Gemelo en máquina de pie", sets:4, reps:"15-20", note:"Sprint y salto" },
-    { name:"Step-up con mancuernas", sets:3, reps:"10/lado", note:"Unilateral · agilidad" }
+    { name:"Gemelo sentado (sóleo)", sets:3, reps:"15-20", note:"Fibras lentas · resistencia de sprint" }
   ]},
-  velocidad: { label: "Velocidad", exercises: [
+  velocidad: { label: "Velocidad / Cardio", exercises: [
     { name:"Series de velocidad (sprints)", sets:8, reps:"30s sprint + 60s trote", note:"En pista, hierba o cinta" },
     { name:"Escalera de coordinación", sets:4, reps:"10 pasadas", note:"Agilidad de pies" },
     { name:"Saltos al cajón (box jump)", sets:4, reps:"8", note:"Potencia explosiva" },
+    { name:"Burpees", sets:5, reps:"10-15", note:"Full body HIIT — potencia + cardio" },
+    { name:"Sentadilla con salto (jump squat)", sets:4, reps:"10", note:"Explosividad de pierna" },
+    { name:"Mountain climbers", sets:4, reps:"30s", note:"Core + cardio + agilidad" },
     { name:"Saltos con cuerda", sets:5, reps:"1 min", note:"Coordinación y resistencia" },
     { name:"Correr cuestas", sets:6, reps:"20-30s subida", note:"Velocidad + fuerza de pierna" },
     { name:"Carrera continua Z2", sets:1, reps:"30-45 min", note:"Puls. 130-150 · base aeróbica" },
     { name:"Fartlek (ritmos variables)", sets:1, reps:"35-40 min", note:"Alterna sprints y trote libre" },
-    { name:"Bici HIIT (Tabata)", sets:8, reps:"20s máx + 40s suave", note:"Total ~20 min" }
+    { name:"Bici HIIT (Tabata)", sets:8, reps:"20s máx + 40s suave", note:"Total ~20 min" },
+    { name:"Kettlebell swing", sets:5, reps:"20", note:"Cadena posterior explosiva" }
   ]}
 };
 
@@ -1093,6 +1113,7 @@ function openExerciseModal(exId, dStr){
       <div></div><div class="input-label" style="margin:0">KG / SEG</div><div class="input-label" style="margin:0">REPS</div>
     </div>
     <div class="sets-grid" id="sets-grid">${setsHtml}</div>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:12px" onclick="addSetRow()">+ Serie</button>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveExercise('${exId}','${dStr}')">Guardar</button>
@@ -1120,7 +1141,47 @@ function saveExercise(exId, dStr){
   renderWorkout();
   renderDashboard();
 }
+function addSetRow(){
+  const grid = document.getElementById('sets-grid');
+  const idx = grid.querySelectorAll('.set-row').length;
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  row.innerHTML = `<div class="set-num">${idx+1}</div>
+    <input type="number" placeholder="kg" step="0.5" data-set="${idx}" data-field="kg">
+    <input type="number" placeholder="reps" data-set="${idx}" data-field="reps">`;
+  grid.appendChild(row);
+}
 function closeModal(){ document.getElementById('modal-bg').classList.remove('active'); }
+
+function exportData(){
+  const data = localStorage.getItem('atlas-state-v2');
+  if (!data) { showToast('No hay datos guardados'); return; }
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atlas-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Backup descargado ✓');
+}
+
+function importData(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      localStorage.setItem('atlas-state-v2', JSON.stringify(parsed));
+      showToast('Datos restaurados — recargando…');
+      setTimeout(() => location.reload(), 1200);
+    } catch {
+      showToast('Fichero inválido');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
 </script>
 <script>
 function getAllRecipes(){

@@ -1,4 +1,4 @@
-const CACHE = 'atlas-v1';
+const CACHE = 'atlas-v3';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
