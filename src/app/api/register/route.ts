@@ -4,6 +4,8 @@ import { atlasUsers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const { email, password, name } = await req.json();
 
