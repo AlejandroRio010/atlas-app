@@ -13,12 +13,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (res?.error) {
-      setError("Email o contraseña incorrectos.");
-    } else {
-      window.location.href = "/entrenamiento";
+    try {
+      const res = await signIn("credentials", { email, password, redirect: false });
+      if (!res || res.error) {
+        setError("Email o contraseña incorrectos.");
+      } else {
+        window.location.href = "/entrenamiento";
+      }
+    } catch (err) {
+      setError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
     }
   }
 
