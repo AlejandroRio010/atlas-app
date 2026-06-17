@@ -4,25 +4,10 @@ import { db } from "@/db";
 import { atlasUsers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.name = user.name;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.name = token.name as string;
-      return session;
-    },
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -50,3 +35,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 });
+
