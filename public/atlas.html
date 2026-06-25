@@ -23,7 +23,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .date-block{text-align:right;font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.1em}
 .date-block .day{font-family:var(--display);font-size:22px;color:var(--ink);letter-spacing:.05em;line-height:1}
 .tabs{position:fixed;bottom:0;left:0;right:0;background:rgba(13,13,13,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);padding:12px 0 max(12px,env(safe-area-inset-bottom));z-index:100}
-.tabs-inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:0 8px}
+.tabs-inner{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 8px}
 .tab{background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:6px 2px;font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s}
 .tab svg{width:20px;height:20px;stroke-width:1.5}
 .tab.active{color:var(--accent)}
@@ -300,6 +300,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <button class="tab" data-panel="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/></svg>Comida</button>
 <button class="tab" data-panel="stretch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="2"/><path d="M12 7v4l-3 5M12 11l3 5M9 22l1-5M15 22l-1-5"/></svg>Movil.</button>
 <button class="tab" data-panel="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>Progreso</button>
+<button class="tab" onclick="logoutUser()" style="color:#555"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
 </div></nav>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target.id==='modal-bg') closeModal()"><div class="modal" id="modal-content"></div></div>
@@ -595,6 +596,7 @@ function strToDate(s){ return new Date(s + 'T00:00:00'); }
 function todayDayOfWeek(){ return new Date().getDay(); }
 function fmtDate(s){ return strToDate(s).toLocaleDateString('es', { day:'2-digit', month:'short' }); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+function logoutUser(){ fetch('/api/auth/csrf').then(r=>r.json()).then(({csrfToken})=>{ const f=document.createElement('form'); f.method='POST'; f.action='/api/auth/signout'; const i=document.createElement('input'); i.type='hidden'; i.name='csrfToken'; i.value=csrfToken; f.appendChild(i); document.body.appendChild(f); f.submit(); }).catch(()=>{ window.location.href='/login'; }); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 function getWeekKey(date){
