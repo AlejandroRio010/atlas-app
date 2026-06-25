@@ -596,7 +596,7 @@ function strToDate(s){ return new Date(s + 'T00:00:00'); }
 function todayDayOfWeek(){ return new Date().getDay(); }
 function fmtDate(s){ return strToDate(s).toLocaleDateString('es', { day:'2-digit', month:'short' }); }
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
-function logoutUser(){ fetch('/api/auth/csrf').then(r=>r.json()).then(({csrfToken})=>{ const f=document.createElement('form'); f.method='POST'; f.action='/api/auth/signout'; const i=document.createElement('input'); i.type='hidden'; i.name='csrfToken'; i.value=csrfToken; f.appendChild(i); document.body.appendChild(f); f.submit(); }).catch(()=>{ window.location.href='/login'; }); }
+function logoutUser(){ fetch('/api/auth/csrf').then(r=>r.json()).then(({csrfToken})=>{ const f=document.createElement('form'); f.method='POST'; f.action='/api/auth/signout'; [['csrfToken',csrfToken],['callbackUrl','/login']].forEach(([n,v])=>{ const i=document.createElement('input'); i.type='hidden'; i.name=n; i.value=v; f.appendChild(i); }); document.body.appendChild(f); f.submit(); }).catch(()=>{ window.location.href='/login'; }); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 function getWeekKey(date){
