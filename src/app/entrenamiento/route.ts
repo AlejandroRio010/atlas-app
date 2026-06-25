@@ -10,9 +10,8 @@ export async function GET() {
   const filePath = path.join(process.cwd(), "public", "atlas.html");
   let html = fs.readFileSync(filePath, "utf8");
 
-  // Replace the name shown in the header
-  const name = (session.user?.name ?? "Atleta").toUpperCase();
-  html = html.replace("ALEJANDRO · ATLETA", `${name} · ATLETA`);
+  const name = session.user?.name ?? "Atleta";
+  html = html.replace("Alejandro · Atleta", `${name} · Atleta`);
 
   return new Response(html, {
     headers: {
