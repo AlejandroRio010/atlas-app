@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS">
-<title>ATLAS · Alejandro</title>
+<title>ATLAS</title>
 <style>
 :root{--bg:#0d0d0d;--bg-elev:#161616;--bg-elev-2:#1f1f1f;--line:#2a2a2a;--ink:#f5f1e8;--ink-dim:#8a8580;--ink-faint:#555049;--accent:#ff4d1f;--accent-soft:rgba(255,77,31,.12);--green:#7fb069;--blue:#6ab0e0;--purple:#b08fc7;--teal:#4ecdc4;--display:'Impact','Helvetica Neue Condensed','Arial Narrow',sans-serif;--serif:Georgia,'Times New Roman',serif;--mono:ui-monospace,'SF Mono',Menlo,Monaco,'Courier New',monospace}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -241,11 +241,39 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div></div>
 </div>
 
-<div class="panel" id="panel-stretch">
-<div class="section-label">Movilidad y estiramientos</div>
-<div class="card featured"><div class="hero-label" style="margin-bottom:10px">Recomendado hoy</div><div class="hero-title" style="font-size:32px" id="stretch-recommended">—</div><div class="hero-sub" id="stretch-recommended-sub">—</div></div>
-<div class="pill-row" id="stretch-pills"></div>
-<div id="stretch-list-container"></div>
+<div class="panel" id="panel-rutina">
+<div class="section-label">Mi rutina activa</div>
+<div id="rutina-active-card"></div>
+<div class="section-label" style="margin-top:20px">Cambiar rutina</div>
+<div id="rutina-templates"></div>
+</div>
+
+<div class="panel" id="panel-perfil">
+<div id="perfil-avatar" style="text-align:center;margin-bottom:24px">
+  <div id="perfil-initials" style="width:72px;height:72px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-family:var(--display);font-size:28px;color:#fff;letter-spacing:2px"></div>
+  <div id="perfil-name-display" style="font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--ink-dim);margin-top:10px"></div>
+</div>
+<div class="card" style="margin-bottom:12px">
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:12px">NOMBRE VISIBLE</div>
+  <div style="display:flex;gap:8px">
+    <input id="perfil-name-input" type="text" style="flex:1;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;outline:none" placeholder="Tu nombre">
+    <button onclick="perfilSaveName()" style="background:var(--accent);color:#fff;border:none;padding:10px 16px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">GUARDAR</button>
+  </div>
+</div>
+<div class="card" style="margin-bottom:12px">
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:8px">EMAIL</div>
+  <div id="perfil-email-display" style="font-family:var(--mono);font-size:13px;color:var(--ink-dim)"></div>
+</div>
+<div class="card" style="margin-bottom:24px">
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:12px">CAMBIAR CONTRASEÑA</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <input id="perfil-curr-pw" type="password" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;outline:none" placeholder="Contraseña actual">
+    <input id="perfil-new-pw" type="password" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;outline:none" placeholder="Nueva contraseña">
+    <button onclick="perfilSavePassword()" style="background:var(--bg-elev-2);color:var(--ink);border:1px solid var(--line);padding:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">ACTUALIZAR CONTRASEÑA</button>
+  </div>
+  <div id="perfil-pw-msg" style="font-family:var(--mono);font-size:11px;margin-top:8px;min-height:16px"></div>
+</div>
+<button onclick="logoutUser()" style="width:100%;background:none;border:1px solid #333;color:var(--ink-faint);padding:14px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;cursor:pointer">CERRAR SESIÓN</button>
 </div>
 
 <div class="panel" id="panel-progress">
@@ -298,9 +326,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <button class="tab" data-panel="planner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Plan</button>
 <button class="tab" data-panel="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6.5 6.5h11v11h-11z"/><path d="M2 9.5v5M22 9.5v5M6.5 12H4M20 12h-2.5"/></svg>Gym</button>
 <button class="tab" data-panel="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/></svg>Comida</button>
-<button class="tab" data-panel="stretch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="2"/><path d="M12 7v4l-3 5M12 11l3 5M9 22l1-5M15 22l-1-5"/></svg>Movil.</button>
+<button class="tab" data-panel="rutina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/></svg>Rutina</button>
 <button class="tab" data-panel="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>Progreso</button>
-<button class="tab" onclick="logoutUser()" style="color:#555"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
+<button class="tab" data-panel="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
 </div></nav>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target.id==='modal-bg') closeModal()"><div class="modal" id="modal-content"></div></div>
@@ -1359,70 +1387,91 @@ function deleteRecipe(id){
   renderFood();
 }
 
-function renderStretch(){
-  const sessions = getSessionsForDate(todayStr());
-  const types = sessions.map(s=>s.type);
-  const recName = document.getElementById('stretch-recommended');
-  const recSub = document.getElementById('stretch-recommended-sub');
-  if (types.includes('match')){ recName.textContent='POST-PARTIDO'; recSub.textContent='Recuperación profunda: foam roll y estiramientos largos.'; }
-  else if (types.includes('gym') && types.includes('football')){ recName.textContent='DOBLE SESIÓN'; recSub.textContent='Estira bien al final del día. Cuádriceps, isquios, aductores y pecho.'; }
-  else if (types.includes('gym')){ recName.textContent='POST-ENTRENO'; recSub.textContent='Estiramientos estáticos centrados en lo que has trabajado.'; }
-  else if (types.includes('football')){ recName.textContent='POST-FÚTBOL'; recSub.textContent='Centrado en piernas: cuádriceps, isquios, aductores, glúteos.'; }
-  else { recName.textContent='MOVILIDAD GENERAL'; recSub.textContent='Día suave. Mantén la movilidad sin forzar.'; }
+const RUTINA_TEMPLATES = [
+  { id:'hipertrofia', nombre:'Hipertrofia 3 días', descripcion:'Pecho/Tríceps · Espalda/Bíceps · Piernas', color:'var(--accent)',
+    plan:{ lun:['gym-pecho'], mie:['gym-espalda'], vie:['gym-pierna'], mar:[], jue:[], sab:[], dom:[] } },
+  { id:'fullbody', nombre:'Full Body 3 días', descripcion:'Cuerpo completo lunes, miércoles, viernes', color:'var(--blue)',
+    plan:{ lun:['gym-fullbody'], mie:['gym-fullbody'], vie:['gym-fullbody'], mar:[], jue:[], sab:[], dom:[] } },
+  { id:'ppl', nombre:'Push Pull Legs', descripcion:'Empuje · Tirón · Piernas · descanso · repetir', color:'var(--green)',
+    plan:{ lun:['gym-pecho'], mar:['gym-espalda'], mie:['gym-pierna'], jue:[], vie:['gym-pecho'], sab:['gym-espalda'], dom:[] } },
+  { id:'fuerza', nombre:'Fuerza 4 días', descripcion:'Sentadilla · Press banca · Peso muerto · Press militar', color:'var(--purple)',
+    plan:{ lun:['gym-pierna'], mar:['gym-pecho'], jue:['gym-pierna'], vie:['gym-espalda'], mie:[], sab:[], dom:[] } },
+];
 
-  const pills = ['warmup','post','recovery'];
-  const names = { warmup:'Calentamiento', post:'Post-entreno', recovery:'Recuperación' };
-  let pillsHtml='';
-  pills.forEach(p=>{ pillsHtml += `<div class="pill ${state.stretchView===p?'active':''}" onclick="setStretchView('${p}')">${names[p]}</div>`; });
-  document.getElementById('stretch-pills').innerHTML = pillsHtml;
+function renderRutina(){
+  const active = state.activeRutina || null;
+  const days = ['lun','mar','mie','jue','vie','sab','dom'];
+  const dayNames = ['L','M','X','J','V','S','D'];
 
-  let items;
-  if (state.stretchView==='warmup') items = WARMUP;
-  else if (state.stretchView==='recovery') items = RECOVERY;
-  else items = STRETCHES;
+  const activeT = RUTINA_TEMPLATES.find(r=>r.id===active);
+  const activeCard = document.getElementById('rutina-active-card');
+  if (activeT) {
+    const daysHtml = days.map((d,i)=>`<div style="text-align:center"><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint);margin-bottom:4px">${dayNames[i]}</div><div style="width:28px;height:28px;border-radius:50%;background:${(activeT.plan[d]||[]).length?activeT.color:'var(--bg-elev-2)'};display:flex;align-items:center;justify-content:center"></div></div>`).join('');
+    activeCard.innerHTML = `<div class="card featured" style="border-left:3px solid ${activeT.color}"><div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:6px">RUTINA ACTIVA</div><div style="font-family:var(--display);font-size:22px;margin-bottom:4px">${activeT.nombre}</div><div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-bottom:16px">${activeT.descripcion}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${daysHtml}</div></div>`;
+  } else {
+    activeCard.innerHTML = `<div class="card" style="text-align:center;padding:24px"><div style="font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.1em">Sin rutina activa</div><div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-top:6px">Elige una plantilla abajo</div></div>`;
+  }
 
-  const dStr = todayStr();
-  let html='';
-  items.forEach((s,idx)=>{
-    const key = dStr+'-'+state.stretchView+'-'+idx;
-    const done = state.completedStretches[key];
-    html += `<div class="stretch-item ${done?'done':''}">
-      <div class="stretch-icon-wrap">${STRETCH_ICONS[s.icon]||''}</div>
-      <div class="stretch-info" onclick="toggleStretchByIdx('${state.stretchView}',${idx})">
-        <div class="stretch-name">${s.name}</div>
-        <div class="stretch-time">${s.time}</div>
+  const cont = document.getElementById('rutina-templates');
+  cont.innerHTML = RUTINA_TEMPLATES.map(r=>`
+    <div class="card" style="margin-bottom:10px;border-left:3px solid ${r.color};cursor:pointer" onclick="activarRutina('${r.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:var(--display);font-size:18px;margin-bottom:2px">${r.nombre}</div>
+          <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim)">${r.descripcion}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;padding:6px 10px;border:1px solid ${r.id===active?r.color:'var(--line)'};color:${r.id===active?r.color:'var(--ink-faint)'};white-space:nowrap">${r.id===active?'ACTIVA':'ACTIVAR'}</div>
       </div>
-      <button class="stretch-info-btn" onclick="openStretchInfo('${state.stretchView}',${idx})">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      </button>
-    </div>`;
-  });
-  document.getElementById('stretch-list-container').innerHTML = html;
+    </div>`).join('');
 }
 
-function setStretchView(v){ state.stretchView=v; saveState(); renderStretch(); }
-function toggleStretchByIdx(view, idx){
-  const key = todayStr()+'-'+view+'-'+idx;
-  state.completedStretches[key] = !state.completedStretches[key];
+function activarRutina(id){
+  const t = RUTINA_TEMPLATES.find(r=>r.id===id); if(!t) return;
+  state.activeRutina = id;
+  const days = ['lun','mar','mie','jue','vie','sab','dom'];
+  const dow =  ['1','2','3','4','5','6','0'];
+  const weekKey = getCurrentWeekKey ? getCurrentWeekKey() : Object.keys(state.weeklyPlans||{})[0] || '2026-W26';
+  if (!state.weeklyPlans) state.weeklyPlans = {};
+  if (!state.weeklyPlans[weekKey]) state.weeklyPlans[weekKey] = {};
+  days.forEach((d,i)=>{ state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : []; });
   saveState();
-  renderStretch();
+  showToast('Rutina "' + t.nombre + '" activada ✓');
+  renderRutina();
 }
-function openStretchInfo(view, idx){
-  let items;
-  if (view==='warmup') items = WARMUP;
-  else if (view==='recovery') items = RECOVERY;
-  else items = STRETCHES;
-  const s = items[idx]; if (!s) return;
-  const yt = s.yt ? `<a href="${s.yt}" target="_blank" rel="noopener" class="btn btn-secondary" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">Ver vídeo en YouTube ↗</a>` : '';
-  document.getElementById('modal-content').innerHTML = `
-    <div style="text-align:center;margin-bottom:16px"><div style="display:inline-block;padding:16px;background:var(--bg-elev-2);border-radius:8px">${STRETCH_ICONS[s.icon]||''}</div></div>
-    <div class="modal-title">${s.name.toUpperCase()}</div>
-    <div class="modal-sub">${s.time}</div>
-    <div style="font-family:var(--serif);font-size:14px;line-height:1.6;color:var(--ink);margin-bottom:20px">${s.desc}</div>
-    ${yt}
-    <button class="btn btn-primary" onclick="closeModal()">Entendido</button>
-  `;
-  document.getElementById('modal-bg').classList.add('active');
+
+function renderPerfil(){
+  const name = window.__atlasUserName || 'Atleta';
+  const email = window.__atlasUserEmail || '';
+  const initials = name.slice(0,2).toUpperCase();
+  document.getElementById('perfil-initials').textContent = initials;
+  document.getElementById('perfil-name-display').textContent = name.toUpperCase() + ' · ATLETA';
+  document.getElementById('perfil-name-input').value = name;
+  document.getElementById('perfil-email-display').textContent = email;
+  document.getElementById('perfil-pw-msg').textContent = '';
+}
+
+async function perfilSaveName(){
+  const name = document.getElementById('perfil-name-input').value.trim();
+  if (!name) return;
+  const res = await fetch('/api/user', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  if (res.ok){
+    window.__atlasUserName = name;
+    document.querySelector('.brand-sub').textContent = name + ' · Atleta';
+    showToast('Nombre actualizado ✓');
+    renderPerfil();
+  } else { showToast('Error al guardar'); }
+}
+
+async function perfilSavePassword(){
+  const currentPassword = document.getElementById('perfil-curr-pw').value;
+  const newPassword = document.getElementById('perfil-new-pw').value;
+  const msg = document.getElementById('perfil-pw-msg');
+  if (!currentPassword || !newPassword) { msg.style.color='var(--accent)'; msg.textContent='Rellena ambos campos'; return; }
+  if (newPassword.length < 6) { msg.style.color='var(--accent)'; msg.textContent='Mínimo 6 caracteres'; return; }
+  const res = await fetch('/api/user', {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentPassword,newPassword})});
+  const data = await res.json();
+  if (res.ok){ msg.style.color='var(--green)'; msg.textContent='Contraseña actualizada ✓'; document.getElementById('perfil-curr-pw').value=''; document.getElementById('perfil-new-pw').value=''; }
+  else { msg.style.color='var(--accent)'; msg.textContent=data.error||'Error'; }
 }
 
 function renderProgress(){
@@ -1666,7 +1715,8 @@ function goToTab(panel){
   if (panel==='workout') renderWorkout();
   if (panel==='planner') renderPlanner();
   if (panel==='food') renderFood();
-  if (panel==='stretch') renderStretch();
+  if (panel==='rutina') renderRutina();
+  if (panel==='perfil') renderPerfil();
   if (panel==='progress') renderProgress();
   if (panel==='metrics') renderMetrics();
   window.scrollTo(0,0);

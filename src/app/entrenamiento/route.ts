@@ -11,7 +11,9 @@ export async function GET() {
   let html = fs.readFileSync(filePath, "utf8");
 
   const name = session.user?.name ?? "Atleta";
+  const email = session.user?.email ?? "";
   html = html.replace("Alejandro · Atleta", `${name} · Atleta`);
+  html = html.replace("</body>", `<script>window.__atlasUserName=${JSON.stringify(name)};window.__atlasUserEmail=${JSON.stringify(email)};</script></body>`);
 
   return new Response(html, {
     headers: {
