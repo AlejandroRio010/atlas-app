@@ -738,17 +738,28 @@ function renderDashboard(){
   const monday = getCurrentMonday();
   const weekStart = dateToStr(monday);
   let totalVol=0, gymSessions=0;
-  Object.entries(state.workouts).forEach(([date,ex])=>{
-    if (date >= weekStart){
-      let dayVol=0, has=false;
-      Object.values(ex).forEach(e=>{
-        (e.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps){ dayVol+=s.kg*s.reps; has=true; } });
-      });
-      totalVol += dayVol;
-      if (has) gymSessions++;
-    }
-  });
-  document.getElementById('stat-volume').innerHTML = `${Math.round(totalVol).toLocaleString()}<span class="stat-unit">kg</span>`;
+  for (let i=0; i<7; i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const dStr = dateToStr(d);
+    if (dStr > todayStr()) continue;
+    if (!state.workouts[dStr]) continue;
+    // Only count IDs that belong to this day's assigned routine
+    const rKeys = getRoutineKeysForDate(dStr);
+    const validIds = new Set();
+    rKeys.forEach(rk=>getEffectiveExercises(rk).forEach(ex=>validIds.add(ex.id)));
+    if (!validIds.size) continue;
+    let dayVol=0, has=false;
+    Object.entries(state.workouts[dStr]).forEach(([exId,e])=>{
+      if (!validIds.has(exId)) return;
+      (e.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps){ dayVol+=s.kg*s.reps; has=true; } });
+    });
+    totalVol += dayVol;
+    if (has) gymSessions++;
+  }
+  const volDisplay = totalVol >= 1000
+    ? `${(totalVol/1000).toFixed(1)}<span class="stat-unit">tn</span>`
+    : `${Math.round(totalVol)}<span class="stat-unit">kg</span>`;
+  document.getElementById('stat-volume').innerHTML = volDisplay;
   document.getElementById('stat-sessions').innerHTML = `${gymSessions}<span class="stat-unit">/3</span>`;
 
   renderWeekGridDashboard();
