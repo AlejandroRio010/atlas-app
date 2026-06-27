@@ -639,8 +639,9 @@ function saveState(){
     fetch('/api/atlas-state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state})}).catch(()=>{});
   }, 1500);
 }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function dateToStr(d){ return d.toISOString().slice(0,10); }
+function _localDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return _localDateStr(new Date()); }
+function dateToStr(d){ return _localDateStr(d); }
 function strToDate(s){ return new Date(s + 'T00:00:00'); }
 function todayDayOfWeek(){ return new Date().getDay(); }
 function fmtDate(s){ return strToDate(s).toLocaleDateString('es', { day:'2-digit', month:'short' }); }
@@ -1326,7 +1327,7 @@ function exportData(){
   const blob = new Blob([data], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'atlas-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'atlas-backup-' + _localDateStr(new Date()) + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
   showToast('Backup descargado ✓');
