@@ -183,6 +183,50 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .pill{padding:6px 12px;background:var(--bg-elev);border:1px solid var(--line);border-radius:20px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-dim);cursor:pointer}
 .pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* ── NUTRITION ────────────────────────────────────────────────────────── */
+.nut-tab{flex:1;padding:8px;background:var(--bg-elev);border:1px solid var(--line);border-radius:2px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-dim);cursor:pointer;text-align:center;text-transform:uppercase}
+.nut-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nut-meal-section{background:var(--bg-elev);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-bottom:8px}
+.nut-meal-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.nut-meal-name{font-family:var(--display);font-size:18px;letter-spacing:.04em}
+.nut-meal-kcal{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
+.nut-meal-body{display:none;padding-top:10px;margin-top:10px;border-top:1px solid var(--line)}
+.nut-meal-body.open{display:block}
+.nut-food-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.nut-food-item:last-child{border-bottom:none}
+.nut-food-name{flex:1;font-family:var(--serif);font-size:13px;font-weight:600;line-height:1.3}
+.nut-food-macros{font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.05em;margin-top:2px}
+.nut-glass{width:30px;height:36px;border:1.5px solid var(--line);border-radius:0 0 4px 4px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--bg-elev);transition:background .2s,border-color .2s}
+.nut-glass.filled{background:rgba(106,176,224,.18);border-color:var(--blue)}
+/* Onboarding overlay */
+#nut-ob{position:fixed;inset:0;background:var(--bg);z-index:400;display:none;flex-direction:column;overflow-y:auto}
+#nut-ob.show{display:flex}
+.nob-wrap{flex:1;display:flex;flex-direction:column;padding:max(52px,env(safe-area-inset-top)+20px) 20px max(24px,env(safe-area-inset-bottom))}
+.nob-prog{display:flex;gap:5px;margin-bottom:20px}
+.nob-dot{height:3px;border-radius:2px;flex:1;background:var(--line);transition:background .3s}
+.nob-dot.done{background:var(--accent)}
+.nob-dot.cur{background:var(--accent);opacity:.5}
+.nob-step-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--ink-faint);margin-bottom:8px}
+.nob-title{font-family:var(--display);font-size:34px;letter-spacing:.04em;line-height:1.05;margin-bottom:6px}
+.nob-sub{font-family:var(--serif);font-size:13px;color:var(--ink-dim);line-height:1.5;margin-bottom:20px}
+.nob-body{flex:1}
+.nob-foot{padding-top:16px;display:flex;flex-direction:column;gap:8px}
+.nob-card{border:2px solid var(--line);border-radius:4px;padding:14px 16px;cursor:pointer;margin-bottom:8px;transition:border-color .15s,background .15s}
+.nob-card.on{border-color:var(--accent);background:var(--accent-soft)}
+.nob-card-e{font-size:20px;margin-bottom:4px}
+.nob-card-n{font-family:var(--serif);font-weight:600;font-size:15px}
+.nob-card-d{font-family:var(--serif);font-size:12px;color:var(--ink-dim);margin-top:2px}
+.nob-ii{border:2px solid var(--line);border-radius:4px;padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;transition:all .15s}
+.nob-ii.on{border-color:var(--accent);background:var(--accent-soft)}
+.nob-sex{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.nob-sex-btn{border:2px solid var(--line);border-radius:4px;padding:14px;cursor:pointer;text-align:center;font-size:22px;transition:all .15s}
+.nob-sex-btn.on{border-color:var(--blue);background:rgba(106,176,224,.1)}
+.nob-sex-btn span{font-family:var(--mono);font-size:11px;display:block;margin-top:4px;letter-spacing:.1em}
+.nob-inp-label{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-dim);text-transform:uppercase;display:block;margin-bottom:4px;margin-top:14px}
+.nob-inp{background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:2px;font-family:var(--mono);font-size:16px;width:100%;box-sizing:border-box;outline:none;-webkit-appearance:none}
+.nob-inp:focus{border-color:var(--accent)}
+.nob-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.nob-res-box{background:var(--bg-elev-2);border-radius:4px;padding:14px 16px}
 </style>
 </head>
 <body>
@@ -222,25 +266,34 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div>
 
 <div class="panel" id="panel-food">
-<div class="section-label">Nutrición</div>
-<div class="hero-card"><div class="hero-label">Objetivo del día</div><div class="hero-title" id="kcal-target">2900<span style="font-size:24px;color:var(--ink-dim)"> kcal</span></div><div class="hero-sub" id="kcal-context">—</div></div>
+<!-- inner tab bar -->
+<div style="display:flex;gap:6px;margin-bottom:16px">
+  <button class="nut-tab active" id="ntab-hoy" onclick="switchFoodTab('hoy')">Hoy</button>
+  <button class="nut-tab" id="ntab-recetas" onclick="switchFoodTab('recetas')">Recetas</button>
+</div>
 
-<div class="section-label">Suplementos hoy</div>
-<div id="supplements-list"></div>
+<!-- HOY: tracker dinámico -->
+<div id="food-view-hoy">
+  <div id="nut-tracker-wrap"></div>
+</div>
 
-<div class="section-label" style="margin-top:24px">Recetas</div>
-<button class="add-recipe-btn" onclick="openAddRecipeModal()">+ Añadir nueva receta</button>
-<div class="pill-row" id="recipe-pills"></div>
-<div id="meals-list"></div>
-
-<div class="section-label" style="margin-top:24px">Reglas de oro</div>
-<div class="card"><div style="font-family:var(--serif);line-height:1.7;color:var(--ink-dim)">
-<p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">01.</span> Cada comida principal: 1 palma proteína + 1 puño hidrato + 2 puños verdura.</p>
-<p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">02.</span> Pre-partido (3h antes): pasta o arroz con pollo magro.</p>
-<p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">03.</span> Post-entreno: proteína + hidrato dentro de 1-2h.</p>
-<p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">04.</span> Doble entreno (martes/jueves/viernes): puedes meter pan integral en cena.</p>
-<p><span style="color:var(--accent);font-family:var(--mono);font-size:11px">05.</span> Hidratación: 3-3.5L al día.</p>
-</div></div>
+<!-- RECETAS: contenido existente -->
+<div id="food-view-recetas" style="display:none">
+  <div class="section-label">Suplementos hoy</div>
+  <div id="supplements-list"></div>
+  <div class="section-label" style="margin-top:24px">Recetas</div>
+  <button class="add-recipe-btn" onclick="openAddRecipeModal()">+ Añadir nueva receta</button>
+  <div class="pill-row" id="recipe-pills"></div>
+  <div id="meals-list"></div>
+  <div class="section-label" style="margin-top:24px">Reglas de oro</div>
+  <div class="card"><div style="font-family:var(--serif);line-height:1.7;color:var(--ink-dim)">
+  <p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">01.</span> Cada comida principal: 1 palma proteína + 1 puño hidrato + 2 puños verdura.</p>
+  <p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">02.</span> Pre-partido (3h antes): pasta o arroz con pollo magro.</p>
+  <p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">03.</span> Post-entreno: proteína + hidrato dentro de 1-2h.</p>
+  <p style="margin-bottom:10px"><span style="color:var(--accent);font-family:var(--mono);font-size:11px">04.</span> Doble entreno (martes/jueves/viernes): puedes meter pan integral en cena.</p>
+  <p><span style="color:var(--accent);font-family:var(--mono);font-size:11px">05.</span> Hidratación: 3-3.5L al día.</p>
+  </div></div>
+</div>
 </div>
 
 <div class="panel" id="panel-rutina">
@@ -283,6 +336,11 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
     <button onclick="perfilSavePassword()" style="background:var(--bg-elev-2);color:var(--ink);border:1px solid var(--line);padding:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">ACTUALIZAR CONTRASEÑA</button>
   </div>
   <div id="perfil-pw-msg" style="font-family:var(--mono);font-size:11px;margin-top:8px;min-height:16px"></div>
+</div>
+<div class="card" style="margin-bottom:24px" id="perfil-nut-card">
+  <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:10px">NUTRICIÓN</div>
+  <div id="perfil-nut-info" style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-bottom:12px;line-height:1.5"></div>
+  <button onclick="startNutOb(true)" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer" id="perfil-nut-btn">CONFIGURAR NUTRICIÓN</button>
 </div>
 <button onclick="logoutUser()" style="width:100%;background:none;border:1px solid #333;color:var(--ink-faint);padding:14px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;cursor:pointer">CERRAR SESIÓN</button>
 </div>
@@ -330,6 +388,18 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div>
 </div>
 
+</div>
+
+<!-- NUTRITION ONBOARDING OVERLAY -->
+<div id="nut-ob">
+  <div class="nob-wrap">
+    <div class="nob-prog" id="nob-prog"></div>
+    <div class="nob-step-lbl" id="nob-step-lbl"></div>
+    <div class="nob-title" id="nob-title"></div>
+    <div class="nob-sub" id="nob-sub"></div>
+    <div class="nob-body" id="nob-body"></div>
+    <div class="nob-foot" id="nob-foot"></div>
+  </div>
 </div>
 
 <nav class="tabs"><div class="tabs-inner">
@@ -585,6 +655,54 @@ const STRETCH_ICONS = {
 };
 </script>
 <script>
+const NUT_GOALS=[
+  {id:'deficit',e:'🔥',n:'Perder grasa',d:'Déficit calórico controlado'},
+  {id:'surplus',e:'💪',n:'Ganar músculo',d:'Superávit para masa muscular'},
+  {id:'maintenance',e:'⚖️',n:'Mantenimiento',d:'Mantener peso y composición actual'},
+  {id:'recomp',e:'🔄',n:'Recomposición',d:'Perder grasa y ganar músculo'},
+];
+const NUT_DEFICIT=[
+  {label:'Ligero',kcal:-200,pMult:[1.6,1.8],color:'var(--green)'},
+  {label:'Moderado',kcal:-350,pMult:[1.8,2.0],color:'#e0a030'},
+  {label:'Agresivo',kcal:-500,pMult:[2.0,2.2],color:'var(--accent)'},
+];
+const NUT_SURPLUS=[
+  {label:'Ligero',kcal:+150,pMult:[1.6,1.8],color:'var(--green)'},
+  {label:'Moderado',kcal:+300,pMult:[1.8,2.0],color:'#e0a030'},
+  {label:'Agresivo',kcal:+500,pMult:[2.0,2.2],color:'var(--accent)'},
+];
+const NUT_FOODS=[
+  {n:'Pechuga de pollo',k:165,p:31,c:0,f:3.6,per:100,u:'g'},
+  {n:'Arroz blanco cocido',k:130,p:2.4,c:28,f:0.3,per:100,u:'g'},
+  {n:'Huevo entero',k:86,p:7,c:0.5,f:6,per:60,u:'g'},
+  {n:'Avena seca',k:370,p:13,c:64,f:7,per:100,u:'g'},
+  {n:'Plátano',k:89,p:1.1,c:23,f:0.3,per:100,u:'g'},
+  {n:'Pan integral',k:247,p:9,c:44,f:3.5,per:100,u:'g'},
+  {n:'Leche entera',k:61,p:3.2,c:4.8,f:3.2,per:100,u:'ml'},
+  {n:'Yogur griego',k:88,p:7.3,c:3.3,f:5,per:100,u:'g'},
+  {n:'Almendras',k:580,p:20,c:20,f:50,per:30,u:'g'},
+  {n:'Atún en lata',k:120,p:26,c:0,f:1.2,per:100,u:'g'},
+  {n:'Salmón a la plancha',k:187,p:20,c:0,f:11,per:150,u:'g'},
+  {n:'Pechuga de pavo',k:107,p:22,c:0,f:1.6,per:100,u:'g'},
+  {n:'Patata cocida',k:77,p:1.7,c:17,f:0.1,per:150,u:'g'},
+  {n:'Pasta cocida',k:131,p:5,c:25,f:1.1,per:100,u:'g'},
+  {n:'Manzana',k:52,p:0.3,c:14,f:0.2,per:150,u:'g'},
+  {n:'Aceite de oliva',k:884,p:0,c:0,f:100,per:10,u:'ml'},
+  {n:'Queso cottage',k:98,p:11,c:3,f:4.3,per:100,u:'g'},
+  {n:'Proteína en polvo',k:400,p:80,c:10,f:7,per:30,u:'g'},
+  {n:'Lentejas cocidas',k:116,p:9,c:20,f:0.4,per:100,u:'g'},
+  {n:'Aguacate',k:160,p:2,c:9,f:15,per:80,u:'g'},
+  {n:'Naranja',k:47,p:0.9,c:12,f:0.1,per:150,u:'g'},
+  {n:'Ternera magra',k:143,p:26,c:0,f:4,per:150,u:'g'},
+  {n:'Clara de huevo',k:52,p:11,c:0.7,f:0.2,per:100,u:'g'},
+  {n:'Arroz integral cocido',k:110,p:2.6,c:23,f:0.9,per:100,u:'g'},
+  {n:'Garbanzos cocidos',k:164,p:8.9,c:27,f:2.6,per:100,u:'g'},
+];
+
+let _nutVd = null; // fecha visible en tracker (null = hoy)
+let _nutFoodTab = 's'; // 's'=buscar 'm'=manual 'f'=favoritos
+let _nutDbRes = []; // resultados de búsqueda
+
 let state = {
   weights: [],
   workouts: {},
@@ -600,7 +718,10 @@ let state = {
   customRecipes: [],
   supplementsLog: {},
   routineExercises: {},
-  migrated_v3: false
+  migrated_v3: false,
+  nutritionProfile: null,
+  nutrition: {},
+  nutritionFavs: [],
 };
 let progressView = 'sessions';
 
@@ -629,6 +750,7 @@ function loadState(){
       state.selectedDayOffset = (new Date().getDay()===0 ? 6 : new Date().getDay()-1);
       try { localStorage.setItem('atlas-state-v2', JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
+      if(!state.nutritionProfile) startNutOb(false);
     }
   }).catch(()=>{});
 }
@@ -1356,67 +1478,456 @@ function getAllRecipes(){
   return [...RECIPES, ...(state.customRecipes||[])];
 }
 
-function renderFood(){
-  const dow = todayDayOfWeek();
-  const isRest = dow === 6;
-  const target = isRest ? 2550 : 2900;
-  document.getElementById('kcal-target').innerHTML = target + `<span style="font-size:24px;color:var(--ink-dim)"> kcal</span>`;
-  document.getElementById('kcal-context').textContent = isRest ? 'Día de descanso · ligero déficit (recomposición)' : 'Día con entreno o partido · mantenimiento alto';
+// ── NUTRITION CALC ──────────────────────────────────────────────────────────
+function calcNutTargets(profile){
+  const {goal,intensity,sex,weight,tdee}=profile;
+  const opts=goal==='deficit'?NUT_DEFICIT:goal==='surplus'?NUT_SURPLUS:null;
+  const delta=opts?opts[intensity||0].kcal:0;
+  const pMult=opts?opts[intensity||0].pMult:{maintenance:[1.6,1.8],recomp:[2.0,2.2]}[goal]||[1.6,1.8];
+  const kcalTarget=Math.max(1200,tdee+delta);
+  const sf=sex==='f'?0.9:1.0;
+  const refWt=weight;
+  const prot={absMin:Math.round(refWt*sf),optMin:Math.round(refWt*pMult[0]*sf),optMax:Math.round(refWt*pMult[1]*sf),absMax:Math.round(refWt*2.5*sf)};
+  const fat={absMin:Math.round(kcalTarget*.2/9),optMin:Math.round(kcalTarget*.25/9),optMax:Math.round(kcalTarget*.33/9),absMax:Math.round(kcalTarget*.4/9)};
+  const cax=Math.max(80,Math.round((kcalTarget-prot.absMin*4-fat.absMin*9)/4));
+  const cox=Math.max(60,Math.round((kcalTarget-prot.optMin*4-fat.optMin*9)/4));
+  const con=Math.max(40,Math.round((kcalTarget-prot.optMax*4-fat.optMax*9)/4));
+  const carb={absMin:40,optMin:Math.min(con,cox),optMax:cox,absMax:cax};
+  return{kcalTarget,th:{prot,fat,carb}};
+}
 
-  // Supplements
-  const dStr = todayStr();
-  const log = state.supplementsLog[dStr] || {};
-  let suppHtml = '';
-  SUPPLEMENTS.forEach(s=>{
-    const done = log[s.id];
-    suppHtml += `<div class="suppl-card ${done?'done':''}" onclick="toggleSupplement('${s.id}')">
-      <div class="suppl-icon">${s.icon}</div>
-      <div class="suppl-info">
-        <div class="suppl-name">${s.name}</div>
-        <div class="suppl-detail">${s.detail}</div>
+function nutZoneBar(val,th,label,unit='g'){
+  const{absMin,optMin,optMax,absMax}=th;
+  const ceil=Math.max(absMax*1.4,val*1.1,1);
+  const p=v=>Math.min(99.5,(v/ceil)*100);
+  const vp=Math.min(99,p(val));
+  let color,status;
+  if(val<absMin){color='var(--accent)';status=`${Math.round(absMin-val)}${unit} bajo mínimo`;}
+  else if(val<optMin){color='#e0a030';status='Suficiente, no óptimo';}
+  else if(val<=optMax){color='var(--green)';status='Zona óptima ✓';}
+  else if(val<=absMax){color='#e0a030';status='Correcto';}
+  else{color='var(--accent)';status=`+${Math.round(val-absMax)}${unit} sobre máximo`;}
+  return`<div style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px">
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-dim)">${label.toUpperCase()}</span>
+      <div style="text-align:right;line-height:1.2">
+        <span style="font-family:var(--display);font-size:20px">${Math.round(val)}${unit}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:${color};display:block;letter-spacing:.05em">${status}</span>
       </div>
-      <div class="check-mark ${done?'checked':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>
+    <div style="position:relative;height:8px;border-radius:4px;overflow:hidden;background:var(--bg-elev-2)">
+      <div style="position:absolute;top:0;left:0;height:100%;width:${p(absMin).toFixed(1)}%;background:rgba(255,77,31,.3)"></div>
+      <div style="position:absolute;top:0;left:${p(absMin).toFixed(1)}%;height:100%;width:${(p(optMin)-p(absMin)).toFixed(1)}%;background:rgba(224,160,48,.45)"></div>
+      <div style="position:absolute;top:0;left:${p(optMin).toFixed(1)}%;height:100%;width:${(p(optMax)-p(optMin)).toFixed(1)}%;background:rgba(127,176,105,.65)"></div>
+      <div style="position:absolute;top:0;left:${p(optMax).toFixed(1)}%;height:100%;width:${(p(absMax)-p(optMax)).toFixed(1)}%;background:rgba(224,160,48,.45)"></div>
+      <div style="position:absolute;top:0;left:${p(absMax).toFixed(1)}%;height:100%;width:${(100-p(absMax)).toFixed(1)}%;background:rgba(255,77,31,.3)"></div>
+      <div style="position:absolute;top:-3px;height:14px;width:3px;border-radius:2px;background:var(--ink);left:${vp.toFixed(1)}%;transform:translateX(-50%);box-shadow:0 0 4px rgba(0,0,0,.6)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--ink-faint);margin-top:2px;letter-spacing:.04em">
+      <span>mín ${absMin}</span><span>opt ${optMin}–${optMax}</span><span>máx ${absMax}</span>
+    </div>
+  </div>`;
+}
+
+// ── NUTRITION STATE HELPERS ──────────────────────────────────────────────────
+function getNutDay(d){return state.nutrition[d]||{meals:{desayuno:[],almuerzo:[],cena:[],snacks:[]},water:0};}
+function setNutDay(d,data){state.nutrition[d]=data;saveState();}
+function nutTotDay(day){
+  return['desayuno','almuerzo','cena','snacks'].flatMap(m=>day.meals[m]||[])
+    .reduce((a,f)=>({k:a.k+f.k,p:a.p+f.p,c:a.c+f.c,f:a.f+f.f}),{k:0,p:0,c:0,f:0});
+}
+const r1=v=>Math.round(v*10)/10;
+
+// ── NUTRITION ONBOARDING ─────────────────────────────────────────────────────
+let _nob={goal:null,intensity:0,sex:null,age:'',weight:'',tdee:'',isUpdate:false,pending:null};
+
+function startNutOb(update=false){
+  _nob={goal:null,intensity:0,sex:null,age:'',weight:'',tdee:'',isUpdate:update,pending:null,step:0};
+  if(update&&state.nutritionProfile){
+    const p=state.nutritionProfile;
+    _nob.goal=p.goal;_nob.intensity=p.intensity||0;_nob.sex=p.sex;
+    _nob.age=String(p.age||'');_nob.weight=String(p.weight||'');_nob.tdee=String(p.tdee||'');
+  }
+  document.getElementById('nut-ob').classList.add('show');
+  renderNobStep();
+}
+
+function _nobSteps(){
+  const all=['goal','intensity','body','tdee','result'];
+  return(_nob.goal==='deficit'||_nob.goal==='surplus')?all:all.filter(s=>s!=='intensity');
+}
+
+function renderNobStep(){
+  const steps=_nobSteps(),key=steps[_nob.step],total=steps.length;
+  document.getElementById('nob-prog').innerHTML=steps.map((_,i)=>`<div class="nob-dot ${i<_nob.step?'done':i===_nob.step?'cur':''}"></div>`).join('');
+  document.getElementById('nob-step-lbl').textContent=`${_nob.step+1} de ${total}`;
+  const titles={goal:'¿Cuál es tu objetivo?',intensity:'Intensidad',body:'Tus datos físicos',tdee:'Calorías que quemas',result:'Tu plan de nutrición'};
+  const subs={
+    goal:'Define el enfoque de tu alimentación.',
+    intensity:_nob.goal==='deficit'?'Más déficit = más rápido pero más riesgo de perder músculo.':'Más superávit = más músculo potencial pero más grasa.',
+    body:'Para calcular tus rangos de macros óptimos.',
+    tdee:'El total de calorías que consumes al día — incluyendo ejercicio y actividad diaria.',
+    result:'Aquí tienes tus objetivos. Podrás actualizarlos desde el perfil cuando cambien.',
+  };
+  document.getElementById('nob-title').textContent=titles[key];
+  document.getElementById('nob-sub').textContent=subs[key];
+  const body=document.getElementById('nob-body');
+  const foot=document.getElementById('nob-foot');
+
+  if(key==='goal'){
+    body.innerHTML=NUT_GOALS.map(g=>`<div class="nob-card ${_nob.goal===g.id?'on':''}" onclick="_nobPickGoal('${g.id}')"><div class="nob-card-e">${g.e}</div><div class="nob-card-n">${g.n}</div><div class="nob-card-d">${g.d}</div></div>`).join('');
+    foot.innerHTML=`<button class="btn btn-primary" id="nob-next-btn" onclick="_nobNext()" ${!_nob.goal?'disabled':''}>Continuar →</button>`;
+  }
+  else if(key==='intensity'){
+    const opts=_nob.goal==='deficit'?NUT_DEFICIT:NUT_SURPLUS;
+    body.innerHTML=opts.map((o,i)=>`<div class="nob-ii ${_nob.intensity===i?'on':''}" onclick="_nobPickInt(${i})"><div><div style="font-family:var(--serif);font-weight:600;font-size:15px;color:${o.color}">${o.label}</div><div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:2px">${o.kcal>0?'+':''}${o.kcal} kcal/día</div></div><div style="font-family:var(--display);font-size:18px;color:${o.color}">${o.kcal>0?'+':''}${o.kcal}</div></div>`).join('');
+    foot.innerHTML=`<button class="btn btn-primary" onclick="_nobNext()">Continuar →</button><button class="btn btn-secondary" onclick="_nobBack()">← Atrás</button>`;
+  }
+  else if(key==='body'){
+    body.innerHTML=`<div style="margin-bottom:4px;font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-dim)">SEXO</div>
+      <div class="nob-sex"><div class="nob-sex-btn ${_nob.sex==='m'?'on':''}" onclick="_nobPickSex('m')">♂<span>HOMBRE</span></div><div class="nob-sex-btn ${_nob.sex==='f'?'on':''}" onclick="_nobPickSex('f')">♀<span>MUJER</span></div></div>
+      <label class="nob-inp-label">Edad</label><input class="nob-inp" type="number" id="nob-age" value="${_nob.age}" placeholder="28" min="15" max="80">
+      <label class="nob-inp-label">Peso actual (kg)</label><input class="nob-inp" type="number" id="nob-weight" value="${_nob.weight}" placeholder="75" step=".1">`;
+    foot.innerHTML=`<button class="btn btn-primary" onclick="_nobNextBody()">Continuar →</button><button class="btn btn-secondary" onclick="_nobBack()">← Atrás</button>`;
+  }
+  else if(key==='tdee'){
+    body.innerHTML=`<div class="card" style="margin-bottom:16px;background:var(--bg-elev-2);border-color:var(--line)">
+      <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);line-height:1.6">
+        Si no sabes exactamente, usa estos rangos de referencia:<br>
+        <span style="color:var(--ink-dim);font-family:var(--mono);font-size:11px">· Sedentario: <strong style="color:var(--ink)">1800–2200</strong> kcal<br>· Activo 3–4 días: <strong style="color:var(--ink)">2300–2700</strong> kcal<br>· Muy activo (gym + fútbol): <strong style="color:var(--ink)">2800–3200</strong> kcal</span>
+      </div>
+    </div>
+    <label class="nob-inp-label">Kcal que quemas al día (TDEE)</label>
+    <input class="nob-inp" type="number" id="nob-tdee" value="${_nob.tdee}" placeholder="2500" min="1000" max="6000" style="font-size:24px;padding:16px">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:6px;letter-spacing:.08em">Puedes ajustarlo más adelante desde el perfil.</div>`;
+    foot.innerHTML=`<button class="btn btn-primary" onclick="_nobNextTdee()">Ver mi plan →</button><button class="btn btn-secondary" onclick="_nobBack()">← Atrás</button>`;
+  }
+  else if(key==='result'){
+    const p={goal:_nob.goal,intensity:_nob.intensity,sex:_nob.sex,age:parseInt(_nob.age),weight:parseFloat(_nob.weight),tdee:parseFloat(_nob.tdee)};
+    const calc=calcNutTargets(p);
+    _nob.pending={...p,...calc};
+    const goalObj=NUT_GOALS.find(g=>g.id===_nob.goal);
+    const opts=_nob.goal==='deficit'?NUT_DEFICIT:_nob.goal==='surplus'?NUT_SURPLUS:null;
+    const intLabel=opts?opts[_nob.intensity]?.label:'';
+    body.innerHTML=`<div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:4px;padding:14px 16px;margin-bottom:14px">
+      <div style="font-family:var(--display);font-size:20px;letter-spacing:.04em">${goalObj?.e||''} ${goalObj?.n||''}${intLabel?' · '+intLabel:''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);margin-top:4px">${_nob.weight} kg · ${_nob.age} años · TDEE ${_nob.tdee} kcal</div>
+    </div>
+    <div class="nob-res-grid">
+      <div class="nob-res-box"><div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.12em;margin-bottom:4px">OBJETIVO KCAL</div><div style="font-family:var(--display);font-size:28px;color:var(--accent)">${calc.kcalTarget}</div></div>
+      <div class="nob-res-box"><div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.12em;margin-bottom:4px">TDEE BASE</div><div style="font-family:var(--display);font-size:28px">${_nob.tdee}</div></div>
+    </div>
+    <div class="card" style="padding:16px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:12px">RANGOS DE MACROS</div>
+      ${nutZoneBar(0,calc.th.prot,'Proteínas')}${nutZoneBar(0,calc.th.carb,'Carbohidratos')}${nutZoneBar(0,calc.th.fat,'Grasas')}
+      <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-top:6px">Las barras muestran los rangos. El marcador se moverá según lo que registres cada día.</div>
+    </div>`;
+    foot.innerHTML=`<button class="btn btn-primary" onclick="_nobFinish()">Empezar →</button><button class="btn btn-secondary" onclick="_nobBack()">← Atrás</button>`;
+  }
+}
+
+function _nobPickGoal(id){
+  _nob.goal=id;
+  document.querySelectorAll('#nob-body .nob-card').forEach(c=>c.classList.remove('on'));
+  event.currentTarget.classList.add('on');
+  const btn=document.getElementById('nob-next-btn');if(btn)btn.disabled=false;
+}
+function _nobPickInt(i){_nob.intensity=i;document.querySelectorAll('#nob-body .nob-ii').forEach((c,idx)=>c.classList.toggle('on',idx===i));}
+function _nobPickSex(s){_nob.sex=s;document.querySelectorAll('.nob-sex-btn').forEach(c=>c.classList.remove('on'));event.currentTarget.classList.add('on');}
+function _nobNextBody(){
+  _nob.age=document.getElementById('nob-age')?.value||'';
+  _nob.weight=document.getElementById('nob-weight')?.value||'';
+  if(!_nob.sex||!_nob.age||!_nob.weight)return showToast('Rellena todos los campos');
+  _nobNext();
+}
+function _nobNextTdee(){
+  _nob.tdee=document.getElementById('nob-tdee')?.value||'';
+  if(!_nob.tdee||parseFloat(_nob.tdee)<500)return showToast('Introduce un valor válido');
+  _nobNext();
+}
+function _nobNext(){const steps=_nobSteps();if(_nob.step<steps.length-1){_nob.step++;renderNobStep();}}
+function _nobBack(){if(_nob.step>0){_nob.step--;renderNobStep();}}
+function _nobFinish(){
+  if(!_nob.pending)return;
+  state.nutritionProfile=_nob.pending;
+  saveState();
+  document.getElementById('nut-ob').classList.remove('show');
+  showToast(_nob.isUpdate?'Perfil nutricional actualizado ✓':'¡Listo! Tu plan está configurado ✓');
+  renderFood();
+  if(!_nob.isUpdate) goToTab('food');
+}
+
+// ── NUTRITION TRACKER ────────────────────────────────────────────────────────
+function switchFoodTab(tab){
+  ['hoy','recetas'].forEach(t=>{
+    document.getElementById('ntab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('food-view-'+t).style.display=t===tab?'':'none';
+  });
+  if(tab==='recetas'){
+    // render supplements + recipes in recetas tab
+    const dStr=todayStr();
+    const log=state.supplementsLog[dStr]||{};
+    let suppHtml='';
+    SUPPLEMENTS.forEach(s=>{
+      const done=log[s.id];
+      suppHtml+=`<div class="suppl-card ${done?'done':''}" onclick="toggleSupplement('${s.id}')">
+        <div class="suppl-icon">${s.icon}</div>
+        <div class="suppl-info"><div class="suppl-name">${s.name}</div><div class="suppl-detail">${s.detail}</div></div>
+        <div class="check-mark ${done?'checked':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>`;
+    });
+    document.getElementById('supplements-list').innerHTML=suppHtml;
+    const filters=[{k:'all',l:'Todas'},{k:'desayuno',l:'Desayuno'},{k:'comida',l:'Comida'},{k:'merienda',l:'Merienda'},{k:'cena',l:'Cena'},{k:'extra',l:'Extras'},{k:'mine',l:'Mis recetas'}];
+    document.getElementById('recipe-pills').innerHTML=filters.map(f=>`<div class="pill ${state.recipeFilter===f.k?'active':''}" onclick="setRecipeFilter('${f.k}')">${f.l}</div>`).join('');
+    const all=getAllRecipes();
+    let filtered=state.recipeFilter==='all'?all:state.recipeFilter==='mine'?all.filter(r=>r.custom):all.filter(r=>r.type===state.recipeFilter);
+    document.getElementById('meals-list').innerHTML=filtered.length?filtered.map(r=>`<div class="meal-card ${r.custom?'mine':''}" onclick="openRecipeDetail('${r.id}')"><div class="meal-header"><div class="meal-name">${r.name.toUpperCase()}</div><div class="meal-kcal">≈ ${r.kcal} kcal</div></div><div class="meal-suggestion">${r.desc}</div></div>`).join(''):`<div class="empty">Sin recetas en esta categoría.</div>`;
+  }
+}
+
+function renderNutTracker(){
+  const vd=_nutVd||todayStr();
+  const isToday=vd===todayStr();
+  const day=getNutDay(vd);
+  const tot=nutTotDay(day);
+  const prof=state.nutritionProfile;
+  const tgt=prof?.kcalTarget||2000;
+  const th=prof?.th;
+
+  // Date navigation
+  const fmtNutDate=d=>{if(d===todayStr())return'HOY';const dt=strToDate(d);const days=['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];return days[dt.getDay()]+' '+dt.getDate();};
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <button onclick="_nutNavD(-1)" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:2px">‹</button>
+    <span style="font-family:var(--mono);font-size:12px;letter-spacing:.15em;color:${isToday?'var(--accent)':'var(--ink)'}">${fmtNutDate(vd)}</span>
+    <button onclick="_nutNavD(1)" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:2px" ${isToday?'disabled style="opacity:.3;cursor:not-allowed"':''}>›</button>
+  </div>`;
+
+  // Calorie ring
+  const pct=Math.min(1,tgt>0?tot.k/tgt:0);
+  const r=38,circ=2*Math.PI*r,offset=circ-pct*circ;
+  const over=tot.k>tgt*1.05;
+  const rem=Math.round(tgt-tot.k);
+  html+=`<div class="card" style="display:flex;gap:16px;align-items:center;padding:16px">
+    <div style="position:relative;flex-shrink:0">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle cx="45" cy="45" r="${r}" fill="none" stroke="var(--line)" stroke-width="7"/>
+        <circle cx="45" cy="45" r="${r}" fill="none" stroke="${over?'var(--accent)':'var(--green)'}" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="${circ.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" transform="rotate(-90 45 45)" style="transition:stroke-dashoffset .5s"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <span style="font-family:var(--display);font-size:22px;line-height:1">${Math.round(pct*100)}%</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">obj</span>
+      </div>
+    </div>
+    <div style="flex:1">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+        <div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint);letter-spacing:.08em">CONS.</div><div style="font-family:var(--display);font-size:20px">${Math.round(tot.k)}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint);letter-spacing:.08em">REST.</div><div style="font-family:var(--display);font-size:20px;color:${rem<0?'var(--accent)':'var(--green)'}">${rem>=0?rem:'+'+Math.abs(rem)}</div></div>
+        <div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint);letter-spacing:.08em">OBJ.</div><div style="font-family:var(--display);font-size:20px">${tgt}</div></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.06em">P ${Math.round(tot.p)}g · C ${Math.round(tot.c)}g · G ${Math.round(tot.f)}g</div>
+    </div>
+  </div>`;
+
+  // Macro bars
+  if(th){
+    html+=`<div class="card" style="padding:16px">${nutZoneBar(tot.p,th.prot,'Proteínas')}${nutZoneBar(tot.c,th.carb,'Carbohidratos')}${nutZoneBar(tot.f,th.fat,'Grasas')}</div>`;
+  }
+
+  // Water
+  const wgoal=8;
+  html+=`<div class="card" style="padding:14px 16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-dim)">HIDRATACIÓN</div>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--ink-dim)">${day.water} / ${wgoal} vasos</span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      ${Array.from({length:wgoal},(_,i)=>`<div class="nut-glass ${i<day.water?'filled':''}" onclick="${isToday?`_nutToggleWater('${vd}',${i+1},${wgoal})`:'void 0'}">💧</div>`).join('')}
+    </div>
+  </div>`;
+
+  // Meals
+  const mealDefs=[{id:'desayuno',e:'🌅',n:'Desayuno'},{id:'almuerzo',e:'☀️',n:'Almuerzo'},{id:'cena',e:'🌙',n:'Cena'},{id:'snacks',e:'🍎',n:'Snacks'}];
+  mealDefs.forEach(m=>{
+    const items=day.meals[m.id]||[];
+    const mkcal=items.reduce((a,f)=>a+f.k,0);
+    const bodyId=`nm-body-${m.id}`;
+    html+=`<div class="nut-meal-section">
+      <div class="nut-meal-head" onclick="_nutTogMeal('${bodyId}')">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">${m.e}</span><span class="nut-meal-name">${m.n}</span><span style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">${items.length>0?items.length+' items':''}</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="nut-meal-kcal">${Math.round(mkcal)} kcal</span><span style="font-family:var(--mono);font-size:14px;color:var(--ink-faint)">›</span></div>
+      </div>
+      <div class="nut-meal-body" id="${bodyId}">
+        ${items.length?items.map((f,i)=>`<div class="nut-food-item">
+          <div style="flex:1"><div class="nut-food-name">${f.name}</div><div class="nut-food-macros">P ${r1(f.p)}g · C ${r1(f.c)}g · G ${r1(f.f)}g · ${Math.round(f.k)} kcal</div></div>
+          ${isToday?`<button onclick="_nutRemFood('${vd}','${m.id}',${i})" style="background:none;border:none;color:var(--ink-faint);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">×</button>`:''}
+        </div>`).join(''):'<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);padding:4px 0">Sin alimentos registrados.</div>'}
+        ${isToday?`<button onclick="openAddFoodModal('${m.id}')" style="width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--ink-faint);padding:8px;font-family:var(--mono);font-size:9px;letter-spacing:.15em;cursor:pointer;border-radius:2px">+ AÑADIR ALIMENTO</button>`:''}
+      </div>
     </div>`;
   });
-  document.getElementById('supplements-list').innerHTML = suppHtml;
 
-  // Recipe pills
-  const filters = [
-    {k:'all', l:'Todas'},
-    {k:'desayuno', l:'Desayuno'},
-    {k:'comida', l:'Comida'},
-    {k:'merienda', l:'Merienda'},
-    {k:'cena', l:'Cena'},
-    {k:'extra', l:'Extras'},
-    {k:'mine', l:'Mis recetas'}
-  ];
-  let pillsHtml = '';
-  filters.forEach(f=>{
-    pillsHtml += `<div class="pill ${state.recipeFilter===f.k?'active':''}" onclick="setRecipeFilter('${f.k}')">${f.l}</div>`;
-  });
-  document.getElementById('recipe-pills').innerHTML = pillsHtml;
+  document.getElementById('nut-tracker-wrap').innerHTML=html;
+}
 
-  // Recipes list
-  const all = getAllRecipes();
-  let filtered;
-  if (state.recipeFilter === 'all') filtered = all;
-  else if (state.recipeFilter === 'mine') filtered = all.filter(r=>r.custom);
-  else filtered = all.filter(r=>r.type===state.recipeFilter);
+function _nutNavD(dir){
+  const d=strToDate(_nutVd||todayStr());
+  d.setDate(d.getDate()+dir);
+  const nd=dateToStr(d);
+  if(nd>todayStr())return;
+  _nutVd=nd;
+  renderNutTracker();
+}
+function _nutTogMeal(id){
+  const b=document.getElementById(id);
+  if(b)b.classList.toggle('open');
+}
+function _nutToggleWater(dStr,to,goal){
+  const day=getNutDay(dStr);
+  day.water=day.water===to&&to>0?to-1:to;
+  setNutDay(dStr,day);
+  renderNutTracker();
+}
+function _nutRemFood(dStr,meal,idx){
+  const day=getNutDay(dStr);
+  day.meals[meal].splice(idx,1);
+  setNutDay(dStr,day);
+  renderNutTracker();
+}
 
-  const list = document.getElementById('meals-list');
-  if (!filtered.length){
-    list.innerHTML = `<div class="empty">No hay recetas en esta categoría aún. Pulsa "+ Añadir nueva receta" para crear una.</div>`;
+// ── ADD FOOD MODAL ────────────────────────────────────────────────────────────
+function openAddFoodModal(meal){
+  _nutFoodTab='s';
+  const mealLabels={desayuno:'Desayuno',almuerzo:'Almuerzo',cena:'Cena',snacks:'Snacks'};
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">AÑADIR ALIMENTO</div>
+    <div class="modal-sub">${mealLabels[meal]||meal}</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="nut-tab active" id="nft-s" onclick="_nftTab('s','${meal}')">Buscar</button>
+      <button class="nut-tab" id="nft-m" onclick="_nftTab('m','${meal}')">Manual</button>
+      <button class="nut-tab" id="nft-f" onclick="_nftTab('f','${meal}')">Favoritos</button>
+    </div>
+    <div id="nft-body">${_nftRenderSearch(meal)}</div>`;
+  document.getElementById('modal-bg').classList.add('active');
+}
+
+function _nftTab(tab,meal){
+  _nutFoodTab=tab;
+  ['s','m','f'].forEach(t=>{const el=document.getElementById('nft-'+t);if(el)el.classList.toggle('active',t===tab);});
+  const body=document.getElementById('nft-body');
+  if(!body)return;
+  if(tab==='s')body.innerHTML=_nftRenderSearch(meal);
+  else if(tab==='m')body.innerHTML=_nftRenderManual(meal);
+  else if(tab==='f')body.innerHTML=_nftRenderFavs(meal);
+}
+
+function _nftRenderSearch(meal){
+  return`<input type="text" id="nft-q" placeholder="Buscar alimento…" oninput="_nftSearch('${meal}')"
+    style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--mono);font-size:14px;outline:none;margin-bottom:10px">
+    <div id="nft-res">${_nftDbHtml(NUT_FOODS.slice(0,12),meal)}</div>`;
+}
+function _nftSearch(meal){
+  const q=(document.getElementById('nft-q')?.value||'').toLowerCase().trim();
+  const pool=[...NUT_FOODS,...(state.nutritionFavs||[]).map(f=>({...f,isFav:true}))];
+  const res=q?pool.filter(f=>f.n.toLowerCase().includes(q)):pool.slice(0,15);
+  _nutDbRes=res;
+  const el=document.getElementById('nft-res');
+  if(el)el.innerHTML=_nftDbHtml(res,meal);
+}
+function _nftDbHtml(foods,meal){
+  if(!foods.length)return`<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);padding:12px 0">Sin resultados.</div>`;
+  return foods.map((f,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
+    <div style="flex:1;min-width:0">
+      <div style="font-family:var(--serif);font-size:13px;font-weight:600">${f.n}${f.isFav?'<span style="font-size:10px;color:var(--green);margin-left:5px">★</span>':''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">P${f.p} C${f.c} G${f.f} · por ${f.per}${f.u}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <input type="number" id="nfq-${i}" value="${f.per}" min="1" step="${f.u==='ud'?1:5}" style="width:60px;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:12px;outline:none">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">${f.u}</span>
+      <button onclick="_nftAddDB(${i},'${meal}')" style="background:var(--accent);color:#fff;border:none;padding:6px 12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:2px">+</button>
+    </div>
+  </div>`).join('');
+}
+function _nftAddDB(i,meal){
+  const res=_nutDbRes.length?_nutDbRes:NUT_FOODS.slice(0,12);
+  const f=res[i];if(!f)return;
+  const q=parseFloat(document.getElementById('nfq-'+i)?.value)||f.per;
+  const m=q/f.per;
+  _nutCommitFood({name:f.n,k:r1(f.k*m),p:r1(f.p*m),c:r1(f.c*m),f:r1(f.f*m)},meal);
+}
+
+function _nftRenderManual(meal){
+  return`<div style="display:flex;flex-direction:column;gap:10px">
+    <div><label class="input-label">Nombre del alimento</label><input id="nfm-name" type="text" placeholder="ej: Tortilla de 3 huevos" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--serif);font-size:14px;outline:none"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><label class="input-label">Kcal</label><input id="nfm-k" type="number" placeholder="0" min="0" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:14px;outline:none"></div>
+      <div><label class="input-label">Proteínas (g)</label><input id="nfm-p" type="number" placeholder="0" min="0" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:14px;outline:none"></div>
+      <div><label class="input-label">Carbos (g)</label><input id="nfm-c" type="number" placeholder="0" min="0" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:14px;outline:none"></div>
+      <div><label class="input-label">Grasas (g)</label><input id="nfm-f" type="number" placeholder="0" min="0" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:14px;outline:none"></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--ink-dim);cursor:pointer"><input type="checkbox" id="nfm-fav"> Guardar en favoritos</label>
+    <button onclick="_nftAddManual('${meal}')" style="width:100%;background:var(--accent);color:#fff;border:none;padding:14px;font-family:var(--mono);font-size:11px;letter-spacing:.15em;cursor:pointer">AÑADIR</button>
+  </div>`;
+}
+function _nftAddManual(meal){
+  const name=document.getElementById('nfm-name')?.value.trim();
+  if(!name)return showToast('Introduce un nombre');
+  const k=parseFloat(document.getElementById('nfm-k')?.value)||0;
+  const p=parseFloat(document.getElementById('nfm-p')?.value)||0;
+  const c=parseFloat(document.getElementById('nfm-c')?.value)||0;
+  const f=parseFloat(document.getElementById('nfm-f')?.value)||0;
+  if(document.getElementById('nfm-fav')?.checked){
+    if(!state.nutritionFavs)state.nutritionFavs=[];
+    state.nutritionFavs.push({n:name,k,p,c,f,per:100,u:'g'});
+  }
+  _nutCommitFood({name,k,p,c,f},meal);
+}
+
+function _nftRenderFavs(meal){
+  const favs=state.nutritionFavs||[];
+  if(!favs.length)return`<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);padding:12px 0">Sin favoritos todavía. Añade alimentos marcando "Guardar en favoritos".</div>`;
+  return favs.map((f,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
+    <div style="flex:1"><div style="font-family:var(--serif);font-size:13px;font-weight:600">${f.n}</div><div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">${f.k} kcal / ${f.per}${f.u}</div></div>
+    <button onclick="_nftAddFav(${i},'${meal}')" style="background:var(--accent);color:#fff;border:none;padding:6px 12px;font-family:var(--mono);font-size:10px;cursor:pointer;border-radius:2px">+</button>
+    <button onclick="_nftDelFav(${i},'${meal}')" style="background:none;border:none;color:var(--ink-faint);font-size:18px;cursor:pointer;padding:0 4px">×</button>
+  </div>`).join('');
+}
+function _nftAddFav(i,meal){
+  const f=(state.nutritionFavs||[])[i];if(!f)return;
+  _nutCommitFood({name:f.n,k:f.k,p:f.p||0,c:f.c||0,f:f.f||0},meal);
+}
+function _nftDelFav(i,meal){
+  (state.nutritionFavs||[]).splice(i,1);saveState();
+  document.getElementById('nft-body').innerHTML=_nftRenderFavs(meal);
+}
+
+function _nutCommitFood(entry,meal){
+  const vd=_nutVd||todayStr();
+  const day=getNutDay(vd);
+  day.meals[meal].push(entry);
+  setNutDay(vd,day);
+  closeModal();
+  renderNutTracker();
+  // auto-open the meal section
+  setTimeout(()=>{const b=document.getElementById(`nm-body-${meal}`);if(b)b.classList.add('open');},60);
+  showToast(`Añadido a ${meal} ✓`);
+}
+
+function renderFood(){
+  _nutVd = _nutVd || null;
+  if(!state.nutritionProfile){
+    document.getElementById('nut-tracker-wrap').innerHTML=`<div class="card" style="text-align:center;padding:32px 20px">
+      <div style="font-size:32px;margin-bottom:12px">🥗</div>
+      <div style="font-family:var(--display);font-size:22px;letter-spacing:.04em;margin-bottom:8px">Configura tu nutrición</div>
+      <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);line-height:1.5;margin-bottom:20px">Responde 4 preguntas rápidas para calcular tus calorías objetivo y rangos de macros personalizados.</div>
+      <button onclick="startNutOb(false)" style="background:var(--accent);color:#fff;border:none;padding:14px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;cursor:pointer">CONFIGURAR AHORA →</button>
+    </div>`;
     return;
   }
-  let html='';
-  filtered.forEach(r=>{
-    html += `<div class="meal-card ${r.custom?'mine':''}" onclick="openRecipeDetail('${r.id}')">
-      <div class="meal-header"><div class="meal-name">${r.name.toUpperCase()}</div><div class="meal-kcal">≈ ${r.kcal} kcal</div></div>
-      <div class="meal-suggestion">${r.desc}</div>
-    </div>`;
-  });
-  list.innerHTML = html;
+  renderNutTracker();
 }
+
+function setRecipeFilter(f){ state.recipeFilter = f; saveState(); switchFoodTab('recetas'); }
 
 function setRecipeFilter(f){ state.recipeFilter = f; saveState(); renderFood(); }
 
@@ -1425,7 +1936,7 @@ function toggleSupplement(id){
   if (!state.supplementsLog[dStr]) state.supplementsLog[dStr] = {};
   state.supplementsLog[dStr][id] = !state.supplementsLog[dStr][id];
   saveState();
-  renderFood();
+  switchFoodTab('recetas');
 }
 
 function openRecipeDetail(id){
@@ -1600,6 +2111,20 @@ function renderPerfil(){
   document.getElementById('perfil-name-input').value = name;
   document.getElementById('perfil-email-display').textContent = email;
   document.getElementById('perfil-pw-msg').textContent = '';
+  // Nutrition summary
+  const nutInfo = document.getElementById('perfil-nut-info');
+  const nutBtn = document.getElementById('perfil-nut-btn');
+  const p = state.nutritionProfile;
+  if(p){
+    const goalObj = NUT_GOALS.find(g=>g.id===p.goal);
+    const opts = p.goal==='deficit'?NUT_DEFICIT:p.goal==='surplus'?NUT_SURPLUS:null;
+    const intLabel = opts?opts[p.intensity||0]?.label:'';
+    nutInfo.innerHTML = `<span style="color:var(--accent)">${goalObj?.e||''} ${goalObj?.n||''}${intLabel?' · '+intLabel:''}</span><br>${p.weight} kg · ${p.age} años · ${p.kcalTarget} kcal objetivo`;
+    nutBtn.textContent = 'ACTUALIZAR DATOS DE NUTRICIÓN';
+  } else {
+    nutInfo.textContent = 'Sin configurar. Toca el botón para empezar.';
+    nutBtn.textContent = 'CONFIGURAR NUTRICIÓN';
+  }
 }
 
 async function perfilSaveName(){
