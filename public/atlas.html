@@ -960,12 +960,13 @@ function renderWorkout(){
   const headerActions = `<button class="hero-cta" onclick="changeRoutineForSlot('${selStr}',${state.selectedSessionIndex})">Cambiar rutina</button>${sessions.length<2?`<button class="hero-cta secondary" onclick="addSessionToDay('${selStr}')">+ 2ª sesión</button>`:''}`;
 
   if (r.type==='rest'){
+    const _savedGym = renderSavedGymData(selStr);
     cont.innerHTML = `<div class="card featured">
       <div class="hero-label">${r.name}</div>
       <div class="hero-title" style="font-size:32px">${r.desc.toUpperCase()}</div>
       <div class="hero-sub">No toca gym. Descansa o haz movilidad ligera.</div>
       ${headerActions}
-    </div>${renderSessionForm(selStr, r.type, state.selectedSessionIndex)}`;
+    </div>${_savedGym}${renderSessionForm(selStr, r.type, state.selectedSessionIndex)}`;
     return;
   }
   if (r.type==='football'){
@@ -1230,6 +1231,41 @@ function saveExercise(exId, dStr){
   renderWorkout();
   renderDashboard();
 }
+function findExById(id){
+  for (const rk of Object.keys(ROUTINES)){
+    const found = (ROUTINES[rk].exercises||[]).find(e=>e.id===id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function renderSavedGymData(dStr){
+  const dayData = state.workouts[dStr];
+  if (!dayData) return '';
+  const entries = Object.entries(dayData).map(([id,e])=>{
+    const sets = (e.sets||[]).filter(s=>s&&s.kg&&s.reps);
+    if (!sets.length) return null;
+    const ex = findExById(id);
+    const name = ex ? ex.name : id;
+    const maxKg = Math.max(...sets.map(s=>s.kg));
+    const setsStr = sets.map(s=>`${s.kg}kg×${s.reps}`).join(' · ');
+    return { name, maxKg, setsStr, id, dStr };
+  }).filter(Boolean);
+  if (!entries.length) return '';
+  const rows = entries.map(e=>`
+    <div onclick="openExerciseModal('${e.id}','${e.dStr}')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer">
+      <div>
+        <div style="font-family:var(--serif);font-size:14px">${e.name}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:2px">${e.setsStr}</div>
+      </div>
+      <div style="font-family:var(--display);font-size:18px;color:var(--accent)">${e.maxKg}<span style="font-family:var(--mono);font-size:10px;color:var(--ink-dim)">kg</span></div>
+    </div>`).join('');
+  return `<div class="card" style="margin-top:16px;border-left:3px solid var(--teal)">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--teal);margin-bottom:12px">SESIÓN GUARDADA ESTE DÍA</div>
+    ${rows}
+  </div>`;
+}
+
 function addSetRow(){
   const grid = document.getElementById('sets-grid');
   const idx = grid.querySelectorAll('.set-row').length;
@@ -1521,12 +1557,18 @@ function activarRutina(id){
   if (!t) return;
   state.activeRutina = id;
 
-  // Apply weekly plan
+  // Apply weekly plan — only overwrite TODAY and future days; preserve past days with workout data
   const dow = ['1','2','3','4','5','6','0'];
   const weekKey = getWeekKey(new Date());
   if (!state.weeklyPlans) state.weeklyPlans = {};
   if (!state.weeklyPlans[weekKey]) state.weeklyPlans[weekKey] = {};
-  DIAS_KEYS.forEach((d,i)=>{ state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : []; });
+  const mon = getCurrentMonday();
+  DIAS_KEYS.forEach((d,i)=>{
+    const dayDate = new Date(mon); dayDate.setDate(mon.getDate()+i);
+    const dayStr = dateToStr(dayDate);
+    const hasPastData = dayStr < todayStr() && state.workouts[dayStr] && Object.values(state.workouts[dayStr]).some(e=>e.sets&&e.sets.some(s=>s&&s.kg));
+    if (!hasPastData) state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : [];
+  });
 
   // For custom routines, inject exercises into ROUTINES so gym section can show them
   if (custom && custom.dias) {
