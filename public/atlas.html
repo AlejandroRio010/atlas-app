@@ -343,6 +343,15 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div></nav>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target.id==='modal-bg') closeModal()"><div class="modal" id="modal-content"></div></div>
+
+<div id="done-overlay" style="position:fixed;inset:0;background:#0a0a0a;z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px">
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--ink-faint);margin-bottom:24px">SESIÓN COMPLETADA</div>
+  <div id="done-kg-number" style="font-family:var(--display);font-size:min(96px,22vw);color:var(--accent);line-height:1;margin-bottom:6px">0</div>
+  <div style="font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--ink-dim);margin-bottom:32px">KG LEVANTADOS HOY</div>
+  <div id="done-msg" style="font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:8px"></div>
+  <div id="done-week" style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:48px"></div>
+  <button onclick="closeDoneOverlay()" style="background:var(--accent);color:#fff;border:none;padding:16px 48px;font-family:var(--mono);font-size:12px;letter-spacing:.2em;cursor:pointer">CERRAR</button>
+</div>
 <div class="toast" id="toast"></div>
 <script>
 const ROUTINES = {
@@ -1012,7 +1021,17 @@ function renderWorkout(){
       </div>
     </div>`;
   });
-  html += '</div>' + renderSessionForm(selStr, 'gym', state.selectedSessionIndex);
+  const _sd = (state.sessionData[selStr] && state.sessionData[selStr][state.selectedSessionIndex]) || {};
+  if (_sd.finished) {
+    html += `</div><div style="background:rgba(127,176,105,.08);border:1px solid var(--green);padding:20px;text-align:center;margin-top:8px;border-radius:4px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--green);margin-bottom:10px">SESIÓN COMPLETADA</div>
+      <div style="font-family:var(--display);font-size:44px;color:var(--green);line-height:1">${(_sd.totalKg||0).toLocaleString()}<span style="font-family:var(--mono);font-size:14px;color:var(--ink-dim)"> kg</span></div>
+      <button onclick="showDoneOverlay(${_sd.totalKg||0})" style="margin-top:14px;background:none;border:1px solid var(--green);color:var(--green);padding:9px 20px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;cursor:pointer">VER RESUMEN →</button>
+    </div>`;
+  } else {
+    html += `</div><button onclick="finishGymSession('${selStr}',${state.selectedSessionIndex})" style="width:100%;background:var(--accent);border:none;color:#fff;padding:18px;font-family:var(--mono);font-size:12px;letter-spacing:.2em;cursor:pointer;margin-top:8px;border-radius:2px">✓ TERMINAR SESIÓN</button>`;
+  }
+  html += renderSessionForm(selStr, 'gym', state.selectedSessionIndex);
   cont.innerHTML = html;
 }
 
@@ -1211,6 +1230,48 @@ function addSetRow(){
   grid.appendChild(row);
 }
 function closeModal(){ const mb=document.getElementById('modal-bg'); mb.classList.remove('active'); mb.classList.remove('wizard-mode'); }
+
+function finishGymSession(dStr, slotIdx){
+  let totalKg = 0;
+  Object.values(state.workouts[dStr]||{}).forEach(ex=>{
+    (ex.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps) totalKg += s.kg * s.reps; });
+  });
+  totalKg = Math.round(totalKg);
+  if (!state.sessionData[dStr]) state.sessionData[dStr] = {};
+  if (!state.sessionData[dStr][slotIdx]) state.sessionData[dStr][slotIdx] = {};
+  state.sessionData[dStr][slotIdx].finished = true;
+  state.sessionData[dStr][slotIdx].totalKg = totalKg;
+  saveState();
+  renderWorkout();
+  renderDashboard();
+  showDoneOverlay(totalKg);
+}
+
+function showDoneOverlay(totalKg){
+  const monday = getCurrentMonday();
+  const weekStart = dateToStr(monday);
+  let weekKg = 0;
+  Object.entries(state.workouts).forEach(([d,ex])=>{
+    if (d >= weekStart) Object.values(ex).forEach(e=>{
+      (e.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps) weekKg += s.kg*s.reps; });
+    });
+  });
+  weekKg = Math.round(weekKg);
+  const msg = totalKg > 8000 ? '¡Sesión brutal!' : totalKg > 5000 ? '¡Muy buena sesión!' : totalKg > 2000 ? '¡Buen trabajo!' : totalKg > 0 ? '¡Sesión completada!' : 'Sesión registrada';
+  document.getElementById('done-msg').textContent = msg;
+  document.getElementById('done-week').textContent = weekKg > 0 ? `${weekKg.toLocaleString()} kg esta semana` : '';
+  const overlay = document.getElementById('done-overlay');
+  overlay.style.display = 'flex';
+  const numEl = document.getElementById('done-kg-number');
+  if (totalKg === 0){ numEl.textContent = '—'; return; }
+  let cur = 0;
+  const inc = Math.max(1, Math.ceil(totalKg / 60));
+  const iv = setInterval(()=>{ cur = Math.min(cur+inc, totalKg); numEl.textContent = cur.toLocaleString(); if(cur>=totalKg) clearInterval(iv); }, 16);
+}
+
+function closeDoneOverlay(){
+  document.getElementById('done-overlay').style.display = 'none';
+}
 
 function exportData(){
   const data = localStorage.getItem('atlas-state-v2');
