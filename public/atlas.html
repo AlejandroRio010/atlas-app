@@ -606,6 +606,7 @@ function loadState(){
     if (data.state && Object.keys(data.state).length > 0){
       state = { ...state, ...data.state };
       migrateState();
+      state.selectedDayOffset = (new Date().getDay()===0 ? 6 : new Date().getDay()-1);
       try { localStorage.setItem('atlas-state-v2', JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
     }
@@ -1388,14 +1389,10 @@ function deleteRecipe(id){
 }
 
 const RUTINA_TEMPLATES = [
-  { id:'hipertrofia', nombre:'Hipertrofia 3 días', descripcion:'Pecho/Tríceps · Espalda/Bíceps · Piernas', color:'var(--accent)',
-    plan:{ lun:['gym-pecho'], mie:['gym-espalda'], vie:['gym-pierna'], mar:[], jue:[], sab:[], dom:[] } },
+  { id:'v1', nombre:'V1 – Rutina actual', descripcion:'Pierna · Pecho/Tríceps · Espalda/Bíceps · Velocidad', color:'var(--accent)',
+    plan:{ lun:['gym-pierna'], mar:[], mie:['gym-pecho'], jue:[], vie:['gym-espalda'], sab:['gym-velocidad'], dom:[] } },
   { id:'fullbody', nombre:'Full Body 3 días', descripcion:'Cuerpo completo lunes, miércoles, viernes', color:'var(--blue)',
     plan:{ lun:['gym-fullbody'], mie:['gym-fullbody'], vie:['gym-fullbody'], mar:[], jue:[], sab:[], dom:[] } },
-  { id:'ppl', nombre:'Push Pull Legs', descripcion:'Empuje · Tirón · Piernas · descanso · repetir', color:'var(--green)',
-    plan:{ lun:['gym-pecho'], mar:['gym-espalda'], mie:['gym-pierna'], jue:[], vie:['gym-pecho'], sab:['gym-espalda'], dom:[] } },
-  { id:'fuerza', nombre:'Fuerza 4 días', descripcion:'Sentadilla · Press banca · Peso muerto · Press militar', color:'var(--purple)',
-    plan:{ lun:['gym-pierna'], mar:['gym-pecho'], jue:['gym-pierna'], vie:['gym-espalda'], mie:[], sab:[], dom:[] } },
 ];
 
 function renderRutina(){
@@ -1413,27 +1410,56 @@ function renderRutina(){
   }
 
   const cont = document.getElementById('rutina-templates');
-  cont.innerHTML = RUTINA_TEMPLATES.map(r=>`
-    <div class="card" style="margin-bottom:10px;border-left:3px solid ${r.color};cursor:pointer" onclick="activarRutina('${r.id}')">
+  const customRutinas = state.customRoutines || [];
+  const allTemplates = [...RUTINA_TEMPLATES, ...customRutinas.map(r=>({...r, color:'var(--teal)', isCustom:true}))];
+  cont.innerHTML = allTemplates.map(r=>`
+    <div class="card" style="margin-bottom:10px;border-left:3px solid ${r.color}">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
+        <div style="flex:1;min-width:0">
           <div style="font-family:var(--display);font-size:18px;margin-bottom:2px">${r.nombre}</div>
-          <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim)">${r.descripcion}</div>
+          <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim)">${r.descripcion||''}</div>
         </div>
-        <div style="font-family:var(--mono);font-size:9px;padding:6px 10px;border:1px solid ${r.id===active?r.color:'var(--line)'};color:${r.id===active?r.color:'var(--ink-faint)'};white-space:nowrap">${r.id===active?'ACTIVA':'ACTIVAR'}</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${r.isCustom?`<button onclick="editarRutinaCustom('${r.id}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;padding:5px 8px;cursor:pointer">EDITAR</button>`:''}
+          <button onclick="activarRutina('${r.id}')" style="background:${r.id===active?r.color:'none'};border:1px solid ${r.id===active?r.color:'var(--line)'};color:${r.id===active?'#fff':'var(--ink-faint)'};font-family:var(--mono);font-size:9px;padding:6px 10px;cursor:pointer;white-space:nowrap">${r.id===active?'ACTIVA':'ACTIVAR'}</button>
+        </div>
       </div>
-    </div>`).join('');
+    </div>`).join('') +
+  `<div class="card" style="margin-bottom:10px;border:1px dashed var(--line);cursor:pointer;text-align:center;padding:20px" onclick="abrirCreadorRutina()">
+    <div style="font-size:22px;color:var(--ink-faint);margin-bottom:6px">+</div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--ink-faint)">CREAR RUTINA PERSONALIZADA</div>
+  </div>`;
 }
 
 function activarRutina(id){
-  const t = RUTINA_TEMPLATES.find(r=>r.id===id); if(!t) return;
+  const predefined = RUTINA_TEMPLATES.find(r=>r.id===id);
+  const custom = (state.customRoutines||[]).find(r=>r.id===id);
+  const t = predefined || custom;
+  if (!t) return;
   state.activeRutina = id;
-  const days = ['lun','mar','mie','jue','vie','sab','dom'];
-  const dow =  ['1','2','3','4','5','6','0'];
-  const weekKey = getCurrentWeekKey ? getCurrentWeekKey() : Object.keys(state.weeklyPlans||{})[0] || '2026-W26';
+
+  // Apply weekly plan
+  const dow = ['1','2','3','4','5','6','0'];
+  const weekKey = getWeekKey(new Date());
   if (!state.weeklyPlans) state.weeklyPlans = {};
   if (!state.weeklyPlans[weekKey]) state.weeklyPlans[weekKey] = {};
-  days.forEach((d,i)=>{ state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : []; });
+  DIAS_KEYS.forEach((d,i)=>{ state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : []; });
+
+  // For custom routines, inject exercises into ROUTINES so gym section can show them
+  if (custom && custom.dias) {
+    DIAS_KEYS.forEach(dk=>{
+      const ejercicios = custom.dias[dk];
+      if (!ejercicios || !ejercicios.length) return;
+      const key = 'gym-custom-'+dk;
+      ROUTINES[key] = {
+        name: custom.nombre + ' – ' + DIAS_LABELS[DIAS_KEYS.indexOf(dk)],
+        desc: ejercicios.map(e=>e.nombre).join(' · '),
+        color: 'gym', type: 'gym',
+        exercises: ejercicios.map((e,i)=>({ id:'CUS'+i, name:e.nombre, sets:parseInt(e.series)||3, reps:e.reps||'10', note:'' }))
+      };
+    });
+  }
+
   saveState();
   showToast('Rutina "' + t.nombre + '" activada ✓');
   renderRutina();
@@ -1472,6 +1498,99 @@ async function perfilSavePassword(){
   const data = await res.json();
   if (res.ok){ msg.style.color='var(--green)'; msg.textContent='Contraseña actualizada ✓'; document.getElementById('perfil-curr-pw').value=''; document.getElementById('perfil-new-pw').value=''; }
   else { msg.style.color='var(--accent)'; msg.textContent=data.error||'Error'; }
+}
+
+// ── Custom routine builder ──────────────────────────────────────────
+let _editingRutinaId = null;
+const DIAS_LABELS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const DIAS_KEYS   = ['lun','mar','mie','jue','vie','sab','dom'];
+
+function abrirCreadorRutina(){ _editingRutinaId = null; _mostrarModalRutina({nombre:'',descripcion:'',dias:{}}); }
+function editarRutinaCustom(id){
+  const r = (state.customRoutines||[]).find(x=>x.id===id);
+  if (!r) return;
+  _editingRutinaId = id;
+  _mostrarModalRutina(r);
+}
+
+function _mostrarModalRutina(rutina){
+  const dias = rutina.dias || {};
+  const diasHtml = DIAS_KEYS.map((dk,i)=>{
+    const ejercicios = (dias[dk]||[]);
+    const ejHtml = ejercicios.map((ej,ei)=>`
+      <div style="display:grid;grid-template-columns:1fr 60px 60px 36px;gap:4px;margin-bottom:4px" data-dia="${dk}" data-ei="${ei}">
+        <input type="text" placeholder="Ejercicio" value="${ej.nombre||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none" data-field="nombre">
+        <input type="text" placeholder="Series" value="${ej.series||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="series">
+        <input type="text" placeholder="Reps" value="${ej.reps||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="reps">
+        <button onclick="this.closest('[data-dia]').remove()" style="background:none;border:1px solid var(--line);color:var(--ink-faint);cursor:pointer;font-size:14px">×</button>
+      </div>`).join('');
+    return `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint)">${DIAS_LABELS[i].toUpperCase()}</div>
+          <button onclick="_addEjercicioDia('${dk}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;padding:3px 8px;cursor:pointer">+ EJERCICIO</button>
+        </div>
+        <div id="ej-dia-${dk}">${ejHtml}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('modal-content').innerHTML = `
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:12px">${_editingRutinaId?'EDITAR':'NUEVA'} RUTINA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <input id="rc-nombre" type="text" placeholder="Nombre (ej: V2)" value="${rutina.nombre||''}" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;outline:none;grid-column:1/-1">
+    </div>
+    <div style="max-height:55vh;overflow-y:auto;padding-right:4px">${diasHtml}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
+      ${_editingRutinaId?`<button onclick="_eliminarRutinaCustom('${_editingRutinaId}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">ELIMINAR</button>`:'<div></div>'}
+      <button onclick="_guardarRutinaCustom()" style="background:var(--accent);color:#fff;border:none;padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">GUARDAR</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('active');
+}
+
+function _addEjercicioDia(dk){
+  const cont = document.getElementById('ej-dia-'+dk);
+  const ei = cont.querySelectorAll('[data-ei]').length;
+  const div = document.createElement('div');
+  div.style.cssText='display:grid;grid-template-columns:1fr 60px 60px 36px;gap:4px;margin-bottom:4px';
+  div.dataset.dia=dk; div.dataset.ei=ei;
+  div.innerHTML=`<input type="text" placeholder="Ejercicio" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none" data-field="nombre"><input type="text" placeholder="Series" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="series"><input type="text" placeholder="Reps" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="reps"><button onclick="this.closest('[data-dia]').remove()" style="background:none;border:1px solid var(--line);color:var(--ink-faint);cursor:pointer;font-size:14px">×</button>`;
+  cont.appendChild(div);
+}
+
+function _guardarRutinaCustom(){
+  const nombre = document.getElementById('rc-nombre').value.trim();
+  if (!nombre){ showToast('Pon un nombre a la rutina'); return; }
+  const dias = {};
+  DIAS_KEYS.forEach(dk=>{
+    const rows = document.querySelectorAll(`[data-dia="${dk}"]`);
+    const ejercicios = [];
+    rows.forEach(row=>{
+      const n = row.querySelector('[data-field="nombre"]')?.value.trim();
+      if (n) ejercicios.push({ nombre:n, series:row.querySelector('[data-field="series"]')?.value.trim()||'3', reps:row.querySelector('[data-field="reps"]')?.value.trim()||'10' });
+    });
+    if (ejercicios.length) dias[dk] = ejercicios;
+  });
+  if (!state.customRoutines) state.customRoutines = [];
+  const rutinaObj = { id: _editingRutinaId || 'custom-'+uid(), nombre, descripcion: Object.keys(dias).map(dk=>DIAS_LABELS[DIAS_KEYS.indexOf(dk)]).join(' · '), dias, plan: Object.fromEntries(DIAS_KEYS.map(dk=>[dk, dias[dk]?['gym-custom-'+dk]:[]])) };
+  if (_editingRutinaId){
+    const idx = state.customRoutines.findIndex(r=>r.id===_editingRutinaId);
+    if (idx>=0) state.customRoutines[idx] = rutinaObj;
+  } else {
+    state.customRoutines.push(rutinaObj);
+  }
+  saveState();
+  closeModal();
+  showToast('Rutina guardada ✓');
+  renderRutina();
+}
+
+function _eliminarRutinaCustom(id){
+  state.customRoutines = (state.customRoutines||[]).filter(r=>r.id!==id);
+  if (state.activeRutina===id) state.activeRutina=null;
+  saveState();
+  closeModal();
+  showToast('Rutina eliminada');
+  renderRutina();
 }
 
 function renderProgress(){
