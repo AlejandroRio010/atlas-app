@@ -1500,97 +1500,135 @@ async function perfilSavePassword(){
   else { msg.style.color='var(--accent)'; msg.textContent=data.error||'Error'; }
 }
 
-// ── Custom routine builder ──────────────────────────────────────────
-let _editingRutinaId = null;
+// ── Custom routine wizard ──────────────────────────────────────────
 const DIAS_LABELS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const DIAS_KEYS   = ['lun','mar','mie','jue','vie','sab','dom'];
+const _DOW_LABEL  = [{k:'1',l:'Lun'},{k:'2',l:'Mar'},{k:'3',l:'Mié'},{k:'4',l:'Jue'},{k:'5',l:'Vie'},{k:'6',l:'Sáb'},{k:'0',l:'Dom'}];
+const _DOW_TO_DK  = {'1':'lun','2':'mar','3':'mie','4':'jue','5':'vie','6':'sab','0':'dom'};
+let _rw = null;
 
-function abrirCreadorRutina(){ _editingRutinaId = null; _mostrarModalRutina({nombre:'',descripcion:'',dias:{}}); }
+function abrirCreadorRutina(){
+  _rw = { nombre:'', dias:[], curDia:0, showLib:false, libCat:null, editingId:null };
+  _rwStep1();
+}
 function editarRutinaCustom(id){
   const r = (state.customRoutines||[]).find(x=>x.id===id);
   if (!r) return;
-  _editingRutinaId = id;
-  _mostrarModalRutina(r);
+  const dias = DIAS_KEYS.filter(dk=>r.dias&&r.dias[dk]&&r.dias[dk].length)
+    .map(dk=>({ dow: Object.entries(_DOW_TO_DK).find(([,v])=>v===dk)?.[0]||'1', ejercicios: (r.dias[dk]||[]).map(e=>({nombre:e.nombre,series:String(e.series||3),reps:String(e.reps||'10')})) }));
+  _rw = { nombre:r.nombre, dias: dias.length?dias:[{dow:'',ejercicios:[]}], curDia:0, showLib:false, libCat:null, editingId:id };
+  _rwStep2();
 }
 
-function _mostrarModalRutina(rutina){
-  const dias = rutina.dias || {};
-  const diasHtml = DIAS_KEYS.map((dk,i)=>{
-    const ejercicios = (dias[dk]||[]);
-    const ejHtml = ejercicios.map((ej,ei)=>`
-      <div style="display:grid;grid-template-columns:1fr 60px 60px 36px;gap:4px;margin-bottom:4px" data-dia="${dk}" data-ei="${ei}">
-        <input type="text" placeholder="Ejercicio" value="${ej.nombre||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none" data-field="nombre">
-        <input type="text" placeholder="Series" value="${ej.series||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="series">
-        <input type="text" placeholder="Reps" value="${ej.reps||''}" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="reps">
-        <button onclick="this.closest('[data-dia]').remove()" style="background:none;border:1px solid var(--line);color:var(--ink-faint);cursor:pointer;font-size:14px">×</button>
-      </div>`).join('');
-    return `
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint)">${DIAS_LABELS[i].toUpperCase()}</div>
-          <button onclick="_addEjercicioDia('${dk}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;padding:3px 8px;cursor:pointer">+ EJERCICIO</button>
-        </div>
-        <div id="ej-dia-${dk}">${ejHtml}</div>
-      </div>`;
-  }).join('');
-
+function _rwStep1(){
   document.getElementById('modal-content').innerHTML = `
-    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:12px">${_editingRutinaId?'EDITAR':'NUEVA'} RUTINA</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-      <input id="rc-nombre" type="text" placeholder="Nombre (ej: V2)" value="${rutina.nombre||''}" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;outline:none;grid-column:1/-1">
-    </div>
-    <div style="max-height:55vh;overflow-y:auto;padding-right:4px">${diasHtml}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
-      ${_editingRutinaId?`<button onclick="_eliminarRutinaCustom('${_editingRutinaId}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">ELIMINAR</button>`:'<div></div>'}
-      <button onclick="_guardarRutinaCustom()" style="background:var(--accent);color:#fff;border:none;padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">GUARDAR</button>
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:20px">NUEVA RUTINA</div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-dim);margin-bottom:8px">NOMBRE DE LA RUTINA</div>
+    <input id="rw-nombre" type="text" placeholder="ej: Mi rutina V2" value="${_rw.nombre}"
+      style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:14px;font-family:var(--serif);font-size:16px;outline:none;box-sizing:border-box;margin-bottom:24px">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-dim);margin-bottom:12px">¿CUÁNTOS DÍAS ENTRENAS?</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+      ${[2,3,4,5,6].map(n=>`<button onclick="_rwSetDias(${n})"
+        style="padding:22px 0;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);font-family:var(--display);font-size:30px;cursor:pointer">${n}</button>`).join('')}
     </div>`;
   document.getElementById('modal-bg').classList.add('active');
 }
 
-function _addEjercicioDia(dk){
-  const cont = document.getElementById('ej-dia-'+dk);
-  const ei = cont.querySelectorAll('[data-ei]').length;
-  const div = document.createElement('div');
-  div.style.cssText='display:grid;grid-template-columns:1fr 60px 60px 36px;gap:4px;margin-bottom:4px';
-  div.dataset.dia=dk; div.dataset.ei=ei;
-  div.innerHTML=`<input type="text" placeholder="Ejercicio" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none" data-field="nombre"><input type="text" placeholder="Series" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="series"><input type="text" placeholder="Reps" style="background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:6px;font-family:var(--mono);font-size:11px;outline:none;text-align:center" data-field="reps"><button onclick="this.closest('[data-dia]').remove()" style="background:none;border:1px solid var(--line);color:var(--ink-faint);cursor:pointer;font-size:14px">×</button>`;
-  cont.appendChild(div);
+function _rwSetDias(n){
+  _rw.nombre = document.getElementById('rw-nombre')?.value.trim()||'';
+  if (!_rw.nombre){ const inp=document.getElementById('rw-nombre'); inp.style.borderColor='var(--accent)'; inp.focus(); return; }
+  _rw.dias = Array.from({length:n},()=>({dow:'',ejercicios:[]}));
+  _rw.curDia = 0;
+  _rwStep2();
 }
 
-function _guardarRutinaCustom(){
-  const nombre = document.getElementById('rc-nombre').value.trim();
-  if (!nombre){ showToast('Pon un nombre a la rutina'); return; }
-  const dias = {};
-  DIAS_KEYS.forEach(dk=>{
-    const rows = document.querySelectorAll(`[data-dia="${dk}"]`);
-    const ejercicios = [];
-    rows.forEach(row=>{
-      const n = row.querySelector('[data-field="nombre"]')?.value.trim();
-      if (n) ejercicios.push({ nombre:n, series:row.querySelector('[data-field="series"]')?.value.trim()||'3', reps:row.querySelector('[data-field="reps"]')?.value.trim()||'10' });
-    });
-    if (ejercicios.length) dias[dk] = ejercicios;
-  });
-  if (!state.customRoutines) state.customRoutines = [];
-  const rutinaObj = { id: _editingRutinaId || 'custom-'+uid(), nombre, descripcion: Object.keys(dias).map(dk=>DIAS_LABELS[DIAS_KEYS.indexOf(dk)]).join(' · '), dias, plan: Object.fromEntries(DIAS_KEYS.map(dk=>[dk, dias[dk]?['gym-custom-'+dk]:[]])) };
-  if (_editingRutinaId){
-    const idx = state.customRoutines.findIndex(r=>r.id===_editingRutinaId);
-    if (idx>=0) state.customRoutines[idx] = rutinaObj;
-  } else {
-    state.customRoutines.push(rutinaObj);
+function _rwStep2(){
+  const dia = _rw.dias[_rw.curDia];
+  const cur = _rw.curDia, total = _rw.dias.length;
+  const isLast = cur===total-1;
+
+  const ejHtml = dia.ejercicios.length
+    ? dia.ejercicios.map((ej,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-elev-2);margin-bottom:6px">
+        <div style="flex:1;font-family:var(--serif);font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ej.nombre}</div>
+        <input type="text" value="${ej.series}" onchange="_rwUpdEj(${i},'series',this.value)"
+          style="width:38px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:5px;font-family:var(--mono);font-size:11px;text-align:center;outline:none">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--ink-faint)">×</span>
+        <input type="text" value="${ej.reps}" onchange="_rwUpdEj(${i},'reps',this.value)"
+          style="width:44px;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:5px;font-family:var(--mono);font-size:11px;text-align:center;outline:none">
+        <button onclick="_rwRemEj(${i})" style="background:none;border:none;color:var(--ink-faint);font-size:20px;cursor:pointer;line-height:1">×</button>
+      </div>`).join('')
+    : `<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);text-align:center;padding:16px 0">Sin ejercicios — pulsa + para añadir</div>`;
+
+  let libHtml = '';
+  if (_rw.showLib){
+    const catKeys = Object.keys(EXERCISE_LIBRARY||{});
+    const pills = catKeys.map(k=>`<div onclick="_rwLibCat('${k}')" style="flex-shrink:0;padding:8px 14px;background:${_rw.libCat===k?'var(--accent)':'var(--bg-elev-2)'};color:${_rw.libCat===k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;letter-spacing:.1em;cursor:pointer">${((EXERCISE_LIBRARY[k]&&EXERCISE_LIBRARY[k].name)||k).toUpperCase()}</div>`).join('');
+    let exList = '';
+    if (_rw.libCat && EXERCISE_LIBRARY[_rw.libCat]){
+      const exs = EXERCISE_LIBRARY[_rw.libCat].exercises||[];
+      exList = `<div style="margin-top:8px;max-height:180px;overflow-y:auto;border-top:1px solid var(--line)">` +
+        exs.map(ex=>`<div onclick="_rwPickEx(${JSON.stringify(ex.name)},${ex.sets||3},'${ex.reps||'10'}')"
+          style="padding:12px;border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--serif);font-size:14px;active-background:var(--bg-elev-2)">${ex.name}</div>`).join('') +
+        `</div>`;
+    } else {
+      exList = `<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);text-align:center;padding:20px">Elige una categoría arriba</div>`;
+    }
+    libHtml = `<div style="border:1px solid var(--line);margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;gap:1px;overflow-x:auto;background:var(--line)">${pills}</div>
+      ${exList}
+    </div>`;
   }
-  saveState();
-  closeModal();
-  showToast('Rutina guardada ✓');
-  renderRutina();
+
+  document.getElementById('modal-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint)">${_rw.nombre.toUpperCase()} · DÍA ${cur+1} DE ${total}</div>
+      <div style="display:flex;gap:5px">${_rw.dias.map((_,i)=>`<div style="width:7px;height:7px;border-radius:50%;background:${i===cur?'var(--accent)':'var(--line)'}"></div>`).join('')}</div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-bottom:16px">${_rw.editingId?'EDITANDO RUTINA':''}</div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-dim);margin-bottom:8px">¿QUÉ DÍA DE LA SEMANA?</div>
+    <div style="display:flex;gap:4px;margin-bottom:20px">
+      ${_DOW_LABEL.map(d=>`<button onclick="_rwPickDow('${d.k}')"
+        style="flex:1;padding:11px 0;background:${dia.dow===d.k?'var(--accent)':'var(--bg-elev-2)'};border:none;color:${dia.dow===d.k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;cursor:pointer">${d.l}</button>`).join('')}
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-dim);margin-bottom:8px">EJERCICIOS</div>
+    <div style="margin-bottom:10px">${ejHtml}</div>
+    ${libHtml}
+    <button onclick="_rwToggleLib()"
+      style="width:100%;padding:13px;background:${_rw.showLib?'var(--bg-elev-2)':'none'};border:1px ${_rw.showLib?'solid':'dashed'} var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:10px;letter-spacing:.15em;cursor:pointer;margin-bottom:16px">
+      ${_rw.showLib?'▲ CERRAR BUSCADOR':'+ AÑADIR EJERCICIO'}
+    </button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${_rw.editingId&&cur===0?`<button onclick="_rwEliminar()" style="padding:14px;background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;cursor:pointer">ELIMINAR</button>`:`<button onclick="${cur>0?'_rwPrev()':'closeModal()'}" style="padding:14px;background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:10px;cursor:pointer">${cur>0?'← ATRÁS':'CANCELAR'}</button>`}
+      <button onclick="${isLast?'_rwSave()':'_rwNext()'}"
+        style="padding:14px;background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">${isLast?'GUARDAR ✓':'SIGUIENTE →'}</button>
+    </div>`;
 }
 
-function _eliminarRutinaCustom(id){
-  state.customRoutines = (state.customRoutines||[]).filter(r=>r.id!==id);
-  if (state.activeRutina===id) state.activeRutina=null;
-  saveState();
-  closeModal();
-  showToast('Rutina eliminada');
-  renderRutina();
+function _rwToggleLib(){ _rw.showLib=!_rw.showLib; if(!_rw.showLib) _rw.libCat=null; _rwStep2(); }
+function _rwLibCat(cat){ _rw.libCat=cat; _rwStep2(); }
+function _rwPickDow(dow){ _rw.dias[_rw.curDia].dow=dow; _rwStep2(); }
+function _rwPickEx(name,sets,reps){ _rw.dias[_rw.curDia].ejercicios.push({nombre:name,series:String(sets),reps:reps}); _rw.showLib=false; _rw.libCat=null; _rwStep2(); }
+function _rwUpdEj(i,field,val){ if(_rw.dias[_rw.curDia].ejercicios[i]) _rw.dias[_rw.curDia].ejercicios[i][field]=val; }
+function _rwRemEj(i){ _rw.dias[_rw.curDia].ejercicios.splice(i,1); _rwStep2(); }
+function _rwPrev(){ _rw.showLib=false; _rw.curDia--; _rwStep2(); }
+function _rwNext(){ if(!_rw.dias[_rw.curDia].dow){showToast('Elige el día de la semana');return;} _rw.showLib=false; _rw.curDia++; _rwStep2(); }
+function _rwEliminar(){
+  state.customRoutines=(state.customRoutines||[]).filter(r=>r.id!==_rw.editingId);
+  if(state.activeRutina===_rw.editingId) state.activeRutina=null;
+  saveState(); closeModal(); showToast('Rutina eliminada'); renderRutina();
+}
+function _rwSave(){
+  if(!_rw.dias[_rw.curDia].dow){showToast('Elige el día de la semana');return;}
+  const diasObj={}, planObj={};
+  _rw.dias.forEach(d=>{ const dk=_DOW_TO_DK[d.dow]; if(dk){ diasObj[dk]=d.ejercicios; planObj[dk]=d.ejercicios.length?['gym-custom-'+dk]:[]; } });
+  DIAS_KEYS.forEach(dk=>{ if(!planObj[dk]) planObj[dk]=[]; });
+  const desc=_rw.dias.filter(d=>d.dow).map(d=>DIAS_LABELS[DIAS_KEYS.indexOf(_DOW_TO_DK[d.dow])]).join(' · ');
+  if(!state.customRoutines) state.customRoutines=[];
+  const newR={ id:_rw.editingId||'custom-'+uid(), nombre:_rw.nombre, descripcion:desc, dias:diasObj, plan:planObj };
+  if(_rw.editingId){ const idx=state.customRoutines.findIndex(r=>r.id===_rw.editingId); if(idx>=0) state.customRoutines[idx]=newR; else state.customRoutines.push(newR); }
+  else state.customRoutines.push(newR);
+  saveState(); closeModal(); showToast('Rutina guardada ✓'); renderRutina();
 }
 
 function renderProgress(){
