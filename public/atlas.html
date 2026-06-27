@@ -1600,8 +1600,9 @@ function _rwStep2(){
         </div>`;
     } else if (_rw.libCat && fullLib[_rw.libCat]){
       const exs = fullLib[_rw.libCat].exercises||[];
+      window._rwLibExs = exs;
       exList = `<div style="max-height:220px;overflow-y:auto;border-top:1px solid var(--line)">` +
-        exs.map(ex=>`<button onclick="_rwPendEx(${JSON.stringify(ex.name)},${ex.sets||3},${JSON.stringify(ex.reps||'10')})"
+        exs.map((ex,idx)=>`<button onclick="_rwPendEx(${idx})"
           style="display:block;width:100%;padding:15px 12px;border:none;border-bottom:1px solid var(--line);background:transparent;cursor:pointer;font-family:var(--serif);font-size:15px;color:var(--ink);text-align:left">${ex.name}</button>`).join('') +
         `</div>`;
     } else {
@@ -1642,7 +1643,7 @@ function _rwStep2(){
 function _rwToggleLib(){ _rw.showLib=!_rw.showLib; if(!_rw.showLib){_rw.libCat=null;_rw.pendingEx=null;} _rwStep2(); }
 function _rwLibCat(cat){ _rw.libCat=cat; _rw.pendingEx=null; _rwStep2(); }
 function _rwPickDow(dow){ _rw.dias[_rw.curDia].dow=dow; _rwStep2(); }
-function _rwPendEx(name,sets,reps){ _rw.pendingEx={name,series:String(sets),reps}; _rwStep2(); }
+function _rwPendEx(idx){ const ex=window._rwLibExs[idx]; _rw.pendingEx={name:ex.name,series:String(ex.sets||3),reps:ex.reps||'10'}; _rwStep2(); }
 function _rwCancelPend(){ _rw.pendingEx=null; _rwStep2(); }
 function _rwConfirmEx(){
   const series=document.getElementById('rw-pend-sets')?.value.trim()||'3';
