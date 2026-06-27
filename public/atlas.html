@@ -235,6 +235,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <header><div><div class="brand">A<span>·</span>TLAS</div><div class="brand-sub">Alejandro · Atleta</div></div><div class="date-block"><div id="date-day-num" class="day">—</div><div id="date-month">—</div><div id="date-week">—</div></div></header>
 
 <div class="panel active" id="panel-dashboard">
+<div id="nut-notify"></div>
 <div class="hero-card clickable" onclick="goToWorkout()"><div class="hero-label">Hoy <span id="today-name"></span></div><div class="hero-title" id="today-workout">—</div><div class="hero-sub" id="today-detail">Cargando…</div><button class="hero-cta">Ver sesión →</button></div>
 <div class="section-label">Métricas</div>
 <div class="stats-grid">
@@ -830,6 +831,21 @@ function renderHeader(){
 }
 
 function renderDashboard(){
+  const notifyEl = document.getElementById('nut-notify');
+  if(notifyEl){
+    if(!state.nutritionProfile){
+      notifyEl.innerHTML=`<div onclick="startNutOb(false)" style="display:flex;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:4px;padding:12px 14px;margin-bottom:16px;cursor:pointer">
+        <span style="font-size:22px;flex-shrink:0">🥗</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent)">NUEVO · SEGUIMIENTO NUTRICIONAL</div>
+          <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-top:2px">Configura tus calorías y macros en 2 minutos</div>
+        </div>
+        <span style="font-family:var(--mono);font-size:16px;color:var(--accent)">→</span>
+      </div>`;
+    } else {
+      notifyEl.innerHTML='';
+    }
+  }
   const dStr = todayStr();
   const sessions = getSessionsForDate(dStr);
   const dayNames=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -1628,12 +1644,11 @@ function renderNobStep(){
 
 function _nobPickGoal(id){
   _nob.goal=id;
-  document.querySelectorAll('#nob-body .nob-card').forEach(c=>c.classList.remove('on'));
-  event.currentTarget.classList.add('on');
+  document.querySelectorAll('#nob-body .nob-card').forEach((c,i)=>c.classList.toggle('on',NUT_GOALS[i]?.id===id));
   const btn=document.getElementById('nob-next-btn');if(btn)btn.disabled=false;
 }
 function _nobPickInt(i){_nob.intensity=i;document.querySelectorAll('#nob-body .nob-ii').forEach((c,idx)=>c.classList.toggle('on',idx===i));}
-function _nobPickSex(s){_nob.sex=s;document.querySelectorAll('.nob-sex-btn').forEach(c=>c.classList.remove('on'));event.currentTarget.classList.add('on');}
+function _nobPickSex(s){_nob.sex=s;document.querySelectorAll('.nob-sex-btn').forEach((c,i)=>c.classList.toggle('on',(i===0&&s==='m')||(i===1&&s==='f')));}
 function _nobNextBody(){
   _nob.age=document.getElementById('nob-age')?.value||'';
   _nob.weight=document.getElementById('nob-weight')?.value||'';
@@ -1699,7 +1714,7 @@ function renderNutTracker(){
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <button onclick="_nutNavD(-1)" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:2px">‹</button>
     <span style="font-family:var(--mono);font-size:12px;letter-spacing:.15em;color:${isToday?'var(--accent)':'var(--ink)'}">${fmtNutDate(vd)}</span>
-    <button onclick="_nutNavD(1)" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:2px" ${isToday?'disabled style="opacity:.3;cursor:not-allowed"':''}>›</button>
+    <button ${isToday?'disabled':'onclick="_nutNavD(1)"'} style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);width:36px;height:36px;font-size:18px;border-radius:2px;${isToday?'opacity:.3;cursor:not-allowed':'cursor:pointer'}">›</button>
   </div>`;
 
   // Calorie ring
