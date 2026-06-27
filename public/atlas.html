@@ -116,6 +116,8 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .modal-bg.active{display:flex}
 .modal{background:var(--bg-elev);border-top:2px solid var(--accent);border-radius:8px 8px 0 0;width:100%;max-width:480px;padding:24px 20px max(24px,env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;animation:slideUp .25s ease}
+.modal-bg.wizard-mode{align-items:stretch}
+.modal-bg.wizard-mode .modal{border-radius:0;border-top:none;max-height:100%;height:100%;padding-top:max(52px,env(safe-area-inset-top)+16px)}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-title{font-family:var(--display);font-size:24px;letter-spacing:.04em;margin-bottom:4px}
 .modal-sub{font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:20px}
@@ -242,10 +244,19 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div>
 
 <div class="panel" id="panel-rutina">
-<div class="section-label">Mi rutina activa</div>
-<div id="rutina-active-card"></div>
-<div class="section-label" style="margin-top:20px">Cambiar rutina</div>
-<div id="rutina-templates"></div>
+<div class="pill-row" style="margin-bottom:20px">
+  <div class="pill active" id="rtab-rutinas" onclick="switchRutinaTab('rutinas')">Rutinas</div>
+  <div class="pill" id="rtab-ejercicios" onclick="switchRutinaTab('ejercicios')">Ejercicios</div>
+</div>
+<div id="rutina-view-rutinas">
+  <div class="section-label">Mi rutina activa</div>
+  <div id="rutina-active-card"></div>
+  <div class="section-label" style="margin-top:20px">Cambiar rutina</div>
+  <div id="rutina-templates"></div>
+</div>
+<div id="rutina-view-ejercicios" style="display:none">
+  <div id="ejercicios-content"></div>
+</div>
 </div>
 
 <div class="panel" id="panel-perfil">
@@ -1199,7 +1210,7 @@ function addSetRow(){
     <input type="number" placeholder="reps" data-set="${idx}" data-field="reps">`;
   grid.appendChild(row);
 }
-function closeModal(){ document.getElementById('modal-bg').classList.remove('active'); }
+function closeModal(){ const mb=document.getElementById('modal-bg'); mb.classList.remove('active'); mb.classList.remove('wizard-mode'); }
 
 function exportData(){
   const data = localStorage.getItem('atlas-state-v2');
@@ -1531,7 +1542,7 @@ function _rwStep1(){
       ${[2,3,4,5,6].map(n=>`<button onclick="_rwSetDias(${n})"
         style="padding:22px 0;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);font-family:var(--display);font-size:30px;cursor:pointer">${n}</button>`).join('')}
     </div>`;
-  document.getElementById('modal-bg').classList.add('active');
+  const mb=document.getElementById('modal-bg'); mb.classList.add('wizard-mode'); mb.classList.add('active');
 }
 
 function _rwSetDias(n){
@@ -1562,14 +1573,15 @@ function _rwStep2(){
 
   let libHtml = '';
   if (_rw.showLib){
-    const catKeys = Object.keys(EXERCISE_LIBRARY||{});
-    const pills = catKeys.map(k=>`<div onclick="_rwLibCat('${k}')" style="flex-shrink:0;padding:8px 14px;background:${_rw.libCat===k?'var(--accent)':'var(--bg-elev-2)'};color:${_rw.libCat===k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;letter-spacing:.1em;cursor:pointer">${((EXERCISE_LIBRARY[k]&&EXERCISE_LIBRARY[k].name)||k).toUpperCase()}</div>`).join('');
+    const fullLib = getFullLibrary();
+    const catKeys = Object.keys(fullLib);
+    const pills = catKeys.map(k=>`<div onclick="_rwLibCat('${k}')" style="flex-shrink:0;padding:8px 14px;background:${_rw.libCat===k?'var(--accent)':'var(--bg-elev-2)'};color:${_rw.libCat===k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;letter-spacing:.1em;cursor:pointer">${((fullLib[k]&&fullLib[k].label)||k).toUpperCase()}</div>`).join('');
     let exList = '';
-    if (_rw.libCat && EXERCISE_LIBRARY[_rw.libCat]){
-      const exs = EXERCISE_LIBRARY[_rw.libCat].exercises||[];
-      exList = `<div style="margin-top:8px;max-height:180px;overflow-y:auto;border-top:1px solid var(--line)">` +
-        exs.map(ex=>`<div onclick="_rwPickEx(${JSON.stringify(ex.name)},${ex.sets||3},'${ex.reps||'10'}')"
-          style="padding:12px;border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--serif);font-size:14px;active-background:var(--bg-elev-2)">${ex.name}</div>`).join('') +
+    if (_rw.libCat && fullLib[_rw.libCat]){
+      const exs = fullLib[_rw.libCat].exercises||[];
+      exList = `<div style="margin-top:0;max-height:200px;overflow-y:auto;border-top:1px solid var(--line)">` +
+        exs.map(ex=>`<div onclick="_rwPickEx(${JSON.stringify(ex.name)},${ex.sets||3},${JSON.stringify(ex.reps||'10')})"
+          style="padding:14px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--serif);font-size:15px">${ex.name}</div>`).join('') +
         `</div>`;
     } else {
       exList = `<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);text-align:center;padding:20px">Elige una categoría arriba</div>`;
@@ -1580,6 +1592,7 @@ function _rwStep2(){
     </div>`;
   }
 
+  document.getElementById('modal-bg').classList.add('wizard-mode');
   document.getElementById('modal-content').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
       <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint)">${_rw.nombre.toUpperCase()} · DÍA ${cur+1} DE ${total}</div>
@@ -1629,6 +1642,115 @@ function _rwSave(){
   if(_rw.editingId){ const idx=state.customRoutines.findIndex(r=>r.id===_rw.editingId); if(idx>=0) state.customRoutines[idx]=newR; else state.customRoutines.push(newR); }
   else state.customRoutines.push(newR);
   saveState(); closeModal(); showToast('Rutina guardada ✓'); renderRutina();
+}
+
+// ── Exercise library management ─────────────────────────────────────
+function getFullLibrary(){
+  const lib = {};
+  Object.keys(EXERCISE_LIBRARY).forEach(k=>{
+    lib[k] = { label: EXERCISE_LIBRARY[k].label, exercises: [...EXERCISE_LIBRARY[k].exercises] };
+  });
+  const custom = state.customExercises||{};
+  Object.keys(custom).forEach(k=>{
+    if (!lib[k]) lib[k] = { label: k.charAt(0).toUpperCase()+k.slice(1), exercises: [] };
+    custom[k].forEach(e=>lib[k].exercises.push({...e, isCustom:true}));
+  });
+  return lib;
+}
+
+let _ejTab = null;
+
+function switchRutinaTab(tab){
+  ['rutinas','ejercicios'].forEach(t=>{
+    document.getElementById('rtab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('rutina-view-'+t).style.display = t===tab?'':'none';
+  });
+  if (tab==='ejercicios') renderEjercicios();
+}
+
+function renderEjercicios(){
+  const lib = getFullLibrary();
+  const catKeys = Object.keys(lib);
+  if (!_ejTab || !lib[_ejTab]) _ejTab = catKeys[0];
+  const pills = catKeys.map(k=>`<div class="pill ${k===_ejTab?'active':''}" onclick="_ejCat('${k}')" style="white-space:nowrap">${lib[k].label}</div>`).join('');
+  const exs = lib[_ejTab]?.exercises||[];
+  const builtInCount = EXERCISE_LIBRARY[_ejTab]?.exercises?.length||0;
+  const exHtml = exs.length ? exs.map((ex,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-elev);margin-bottom:6px;border-left:2px solid ${ex.isCustom?'var(--teal)':'var(--line)'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-family:var(--serif);font-size:14px">${ex.name}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-top:2px">${ex.sets} × ${ex.reps}${ex.note?' · '+ex.note:''}</div>
+      </div>
+      ${ex.isCustom?`<button onclick="_ejDelete('${_ejTab}',${i-builtInCount})" style="background:none;border:none;color:var(--ink-faint);font-size:22px;cursor:pointer;line-height:1;padding:0 4px">×</button>`:''}
+    </div>`).join('')
+    : `<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);text-align:center;padding:20px">Sin ejercicios en esta categoría</div>`;
+  document.getElementById('ejercicios-content').innerHTML = `
+    <div class="pill-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;margin-bottom:16px">${pills}</div>
+    <div style="margin-bottom:10px">${exHtml}</div>
+    <div class="card" style="border:1px dashed var(--line);cursor:pointer;text-align:center;padding:18px" onclick="abrirNuevoEjercicio()">
+      <div style="font-size:20px;color:var(--ink-faint);margin-bottom:4px">+</div>
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--ink-faint)">AÑADIR EJERCICIO</div>
+    </div>`;
+}
+
+function _ejCat(cat){ _ejTab=cat; renderEjercicios(); }
+
+function _ejDelete(cat, customIdx){
+  if (!state.customExercises?.[cat]) return;
+  state.customExercises[cat].splice(customIdx,1);
+  saveState(); renderEjercicios(); showToast('Ejercicio eliminado');
+}
+
+function abrirNuevoEjercicio(){
+  const lib = getFullLibrary();
+  const catKeys = Object.keys(lib);
+  const opts = catKeys.map(k=>`<option value="${k}" ${k===_ejTab?'selected':''}>${lib[k].label}</option>`).join('');
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">NUEVO EJERCICIO</div>
+    <div class="modal-sub">Se guarda en tu biblioteca</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px">
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">CATEGORÍA</div>
+        <select id="nej-cat" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--mono);font-size:13px;width:100%;outline:none;-webkit-appearance:none">${opts}</select>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">NOMBRE DEL EJERCICIO</div>
+        <input id="nej-name" type="text" placeholder="ej: Press con kettlebell" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--serif);font-size:15px;width:100%;box-sizing:border-box;outline:none">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">SERIES</div>
+          <input id="nej-sets" type="text" value="3" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--mono);font-size:14px;width:100%;box-sizing:border-box;outline:none;text-align:center">
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">REPS / TIEMPO</div>
+          <input id="nej-reps" type="text" value="10" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--mono);font-size:14px;width:100%;box-sizing:border-box;outline:none;text-align:center">
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">NOTA (OPCIONAL)</div>
+        <input id="nej-note" type="text" placeholder="ej: Unilateral, lento en excéntrico..." style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:12px;font-family:var(--serif);font-size:14px;width:100%;box-sizing:border-box;outline:none">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeModal()" class="btn btn-secondary">CANCELAR</button>
+      <button onclick="_ejGuardar()" class="btn btn-primary">AÑADIR</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('active');
+}
+
+function _ejGuardar(){
+  const cat = document.getElementById('nej-cat').value;
+  const name = document.getElementById('nej-name').value.trim();
+  if (!name){ document.getElementById('nej-name').style.borderColor='var(--accent)'; document.getElementById('nej-name').focus(); return; }
+  const sets = parseInt(document.getElementById('nej-sets').value)||3;
+  const reps = document.getElementById('nej-reps').value.trim()||'10';
+  const note = document.getElementById('nej-note').value.trim();
+  if (!state.customExercises) state.customExercises={};
+  if (!state.customExercises[cat]) state.customExercises[cat]=[];
+  state.customExercises[cat].push({name,sets,reps,note});
+  _ejTab=cat;
+  saveState(); closeModal(); renderEjercicios(); showToast('Ejercicio añadido ✓');
 }
 
 function renderProgress(){
