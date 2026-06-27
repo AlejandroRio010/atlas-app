@@ -1519,7 +1519,7 @@ const _DOW_TO_DK  = {'1':'lun','2':'mar','3':'mie','4':'jue','5':'vie','6':'sab'
 let _rw = null;
 
 function abrirCreadorRutina(){
-  _rw = { nombre:'', dias:[], curDia:0, showLib:false, libCat:null, editingId:null };
+  _rw = { nombre:'', dias:[], curDia:0, showLib:false, libCat:null, pendingEx:null, editingId:null };
   _rwStep1();
 }
 function editarRutinaCustom(id){
@@ -1527,7 +1527,7 @@ function editarRutinaCustom(id){
   if (!r) return;
   const dias = DIAS_KEYS.filter(dk=>r.dias&&r.dias[dk]&&r.dias[dk].length)
     .map(dk=>({ dow: Object.entries(_DOW_TO_DK).find(([,v])=>v===dk)?.[0]||'1', ejercicios: (r.dias[dk]||[]).map(e=>({nombre:e.nombre,series:String(e.series||3),reps:String(e.reps||'10')})) }));
-  _rw = { nombre:r.nombre, dias: dias.length?dias:[{dow:'',ejercicios:[]}], curDia:0, showLib:false, libCat:null, editingId:id };
+  _rw = { nombre:r.nombre, dias: dias.length?dias:[{dow:'',ejercicios:[]}], curDia:0, showLib:false, libCat:null, pendingEx:null, editingId:id };
   _rwStep2();
 }
 
@@ -1575,13 +1575,34 @@ function _rwStep2(){
   if (_rw.showLib){
     const fullLib = getFullLibrary();
     const catKeys = Object.keys(fullLib);
-    const pills = catKeys.map(k=>`<div onclick="_rwLibCat('${k}')" style="flex-shrink:0;padding:8px 14px;background:${_rw.libCat===k?'var(--accent)':'var(--bg-elev-2)'};color:${_rw.libCat===k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;letter-spacing:.1em;cursor:pointer">${((fullLib[k]&&fullLib[k].label)||k).toUpperCase()}</div>`).join('');
+    const pills = catKeys.map(k=>`<button onclick="_rwLibCat('${k}')" style="flex-shrink:0;padding:9px 14px;background:${_rw.libCat===k?'var(--accent)':'var(--bg-elev-2)'};border:none;color:${_rw.libCat===k?'#fff':'var(--ink-dim)'};font-family:var(--mono);font-size:9px;letter-spacing:.1em;cursor:pointer">${((fullLib[k]&&fullLib[k].label)||k).toUpperCase()}</button>`).join('');
     let exList = '';
-    if (_rw.libCat && fullLib[_rw.libCat]){
+    if (_rw.pendingEx){
+      exList = `
+        <div style="padding:16px;border-top:1px solid var(--line);background:var(--bg)">
+          <div style="font-family:var(--serif);font-size:16px;margin-bottom:14px">${_rw.pendingEx.name}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);margin-bottom:6px">SERIES</div>
+              <input id="rw-pend-sets" type="number" value="${_rw.pendingEx.series}" inputmode="numeric"
+                style="width:100%;background:var(--bg-elev-2);border:2px solid var(--accent);color:var(--ink);padding:14px;font-family:var(--mono);font-size:22px;text-align:center;outline:none;box-sizing:border-box">
+            </div>
+            <div>
+              <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);margin-bottom:6px">REPS / TIEMPO</div>
+              <input id="rw-pend-reps" type="text" value="${_rw.pendingEx.reps}" inputmode="text"
+                style="width:100%;background:var(--bg-elev-2);border:2px solid var(--accent);color:var(--ink);padding:14px;font-family:var(--mono);font-size:22px;text-align:center;outline:none;box-sizing:border-box">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onclick="_rwCancelPend()" style="padding:13px;background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:10px;cursor:pointer">← VOLVER</button>
+            <button onclick="_rwConfirmEx()" style="padding:13px;background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer">AÑADIR ✓</button>
+          </div>
+        </div>`;
+    } else if (_rw.libCat && fullLib[_rw.libCat]){
       const exs = fullLib[_rw.libCat].exercises||[];
-      exList = `<div style="margin-top:0;max-height:200px;overflow-y:auto;border-top:1px solid var(--line)">` +
-        exs.map(ex=>`<div onclick="_rwPickEx(${JSON.stringify(ex.name)},${ex.sets||3},${JSON.stringify(ex.reps||'10')})"
-          style="padding:14px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-family:var(--serif);font-size:15px">${ex.name}</div>`).join('') +
+      exList = `<div style="max-height:220px;overflow-y:auto;border-top:1px solid var(--line)">` +
+        exs.map(ex=>`<button onclick="_rwPendEx(${JSON.stringify(ex.name)},${ex.sets||3},${JSON.stringify(ex.reps||'10')})"
+          style="display:block;width:100%;padding:15px 12px;border:none;border-bottom:1px solid var(--line);background:transparent;cursor:pointer;font-family:var(--serif);font-size:15px;color:var(--ink);text-align:left">${ex.name}</button>`).join('') +
         `</div>`;
     } else {
       exList = `<div style="font-family:var(--serif);font-size:13px;color:var(--ink-faint);text-align:center;padding:20px">Elige una categoría arriba</div>`;
@@ -1618,10 +1639,18 @@ function _rwStep2(){
     </div>`;
 }
 
-function _rwToggleLib(){ _rw.showLib=!_rw.showLib; if(!_rw.showLib) _rw.libCat=null; _rwStep2(); }
-function _rwLibCat(cat){ _rw.libCat=cat; _rwStep2(); }
+function _rwToggleLib(){ _rw.showLib=!_rw.showLib; if(!_rw.showLib){_rw.libCat=null;_rw.pendingEx=null;} _rwStep2(); }
+function _rwLibCat(cat){ _rw.libCat=cat; _rw.pendingEx=null; _rwStep2(); }
 function _rwPickDow(dow){ _rw.dias[_rw.curDia].dow=dow; _rwStep2(); }
-function _rwPickEx(name,sets,reps){ _rw.dias[_rw.curDia].ejercicios.push({nombre:name,series:String(sets),reps:reps}); _rw.showLib=false; _rw.libCat=null; _rwStep2(); }
+function _rwPendEx(name,sets,reps){ _rw.pendingEx={name,series:String(sets),reps}; _rwStep2(); }
+function _rwCancelPend(){ _rw.pendingEx=null; _rwStep2(); }
+function _rwConfirmEx(){
+  const series=document.getElementById('rw-pend-sets')?.value.trim()||'3';
+  const reps=document.getElementById('rw-pend-reps')?.value.trim()||'10';
+  _rw.dias[_rw.curDia].ejercicios.push({nombre:_rw.pendingEx.name,series,reps});
+  _rw.pendingEx=null; _rw.showLib=false; _rw.libCat=null;
+  _rwStep2();
+}
 function _rwUpdEj(i,field,val){ if(_rw.dias[_rw.curDia].ejercicios[i]) _rw.dias[_rw.curDia].ejercicios[i][field]=val; }
 function _rwRemEj(i){ _rw.dias[_rw.curDia].ejercicios.splice(i,1); _rwStep2(); }
 function _rwPrev(){ _rw.showLib=false; _rw.curDia--; _rwStep2(); }
