@@ -227,6 +227,31 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 .nob-inp:focus{border-color:var(--accent)}
 .nob-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .nob-res-box{background:var(--bg-elev-2);border-radius:4px;padding:14px 16px}
+/* Lumbar Protocol */
+.lmb-badge{display:inline-block;padding:3px 10px;border-radius:2px;font-family:var(--mono);font-size:9px;letter-spacing:.15em}
+.lmb-phase-badge{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.lmb-week-badge{background:var(--bg-elev-2);color:var(--ink-faint);border:1px solid var(--line)}
+.lmb-block{background:var(--bg-elev);border:1px solid var(--line);border-radius:4px;padding:16px;margin-bottom:12px;position:relative}
+.lmb-block.locked{opacity:.35;pointer-events:none}
+.lmb-block-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:8px}
+.lmb-block-title{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--ink)}
+.lmb-freq{font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-top:3px}
+.lmb-ex-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.lmb-ex-row:last-child{border-bottom:none;padding-bottom:0}
+.lmb-ex-name{font-family:var(--serif);font-size:13px;color:var(--ink);flex:1}
+.lmb-ex-dose{font-family:var(--mono);font-size:9px;color:var(--ink-dim);margin-top:2px}
+.lmb-ex-id{font-family:var(--mono);font-size:8px;color:var(--ink-faint);flex-shrink:0;margin-top:2px}
+.lmb-locked-tag{display:inline-block;font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:var(--ink-faint);background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:2px 6px;margin-top:3px}
+.lmb-check-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.lmb-check-btn.done{background:var(--accent);border-color:var(--accent)}
+.lmb-sl-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.lmb-sl-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--ink-dim);flex:1}
+.lmb-sl-val{font-family:var(--display);font-size:20px;min-width:22px;text-align:right;color:var(--ink);line-height:1}
+.lmb-run-inp{background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:8px 10px;font-family:var(--mono);font-size:14px;border-radius:2px;width:72px;outline:none;-webkit-appearance:none;text-align:center}
+.lmb-textarea{background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--serif);font-size:13px;border-radius:2px;width:100%;box-sizing:border-box;resize:vertical;min-height:72px;outline:none}
+.lmb-chart-line{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lmb-adh-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
+.lmb-adh-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .3s}
 </style>
 </head>
 <body>
@@ -389,6 +414,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 </div>
 </div>
 
+<div class="panel" id="panel-lumbar">
+<div id="lumbar-content"></div>
+</div>
+
 </div>
 
 <!-- NUTRITION ONBOARDING OVERLAY -->
@@ -411,6 +440,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <button class="tab" data-panel="rutina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/></svg>Rutina</button>
 <button class="tab" data-panel="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>Progreso</button>
 <button class="tab" data-panel="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
+<button class="tab" data-panel="lumbar" id="tab-lumbar" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="4" ry="2.2"/><ellipse cx="12" cy="12" rx="4" ry="2.2"/><ellipse cx="12" cy="19" rx="4" ry="2.2"/><line x1="12" y1="7.2" x2="12" y2="9.8"/><line x1="12" y1="14.2" x2="12" y2="16.8"/></svg>Lumbar</button>
 </div></nav>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target.id==='modal-bg') closeModal()"><div class="modal" id="modal-content"></div></div>
@@ -704,6 +734,35 @@ let _nutVd = null; // fecha visible en tracker (null = hoy)
 let _nutFoodTab = 's'; // 's'=buscar 'm'=manual 'f'=favoritos
 let _nutDbRes = []; // resultados de búsqueda
 
+const LUMBAR_PROGRAM = {
+  movilidad: {
+    id:'movilidad', label:'Movilidad', freq:'Diario', freqDays:[0,1,2,3,4,5,6],
+    exercises:[
+      {id:'MOV1',name:'Gato-camello',sets:'1-2 series',reps:'8-10 reps lentas'},
+      {id:'MOV2',name:'Estiramiento psoas (medio arrodillado)',sets:'2 series/lado',reps:'30 s'},
+      {id:'MOV3',name:'Figura-4 / piramidal',sets:'2 series/lado',reps:'30 s'},
+      {id:'MOV4',name:'90/90 de cadera',sets:'1-2 series',reps:'6-8/lado'},
+      {id:'MOV5',name:'Rotación torácica (open book)',sets:'1-2 series/lado',reps:'6-8'},
+    ],
+  },
+  big3: {
+    id:'big3', label:'Big 3 (McGill)', freq:'Lun · Mié · Vie', freqDays:[1,3,5],
+    exercises:[
+      {id:'BIG1',name:'Curl-up modificado',sets:'pirámide 6/4/2',reps:'hold 8-10 s'},
+      {id:'BIG2',name:'Plancha lateral',sets:'pirámide 6/4/2 por lado',reps:'hold 8-10 s'},
+      {id:'BIG3',name:'Bird-dog',sets:'pirámide 6/4/2 por lado',reps:'hold 8-10 s'},
+    ],
+  },
+  gluteo: {
+    id:'gluteo', label:'Fuerza glúteo', freq:'2-3×/semana', freqDays:[2,4,6], unlocksWeek:3,
+    exercises:[
+      {id:'GLU1',name:'Puente / Hip thrust',sets:'3 series',reps:'10-12'},
+      {id:'GLU2',name:'Split squat / step-up',sets:'3 series',reps:'8-10/pierna'},
+      {id:'GLU3',name:'Hip thrust con carga',sets:'3 series',reps:'8-12'},
+    ],
+  },
+};
+
 let state = {
   weights: [],
   workouts: {},
@@ -723,6 +782,7 @@ let state = {
   nutritionProfile: null,
   nutrition: {},
   nutritionFavs: [],
+  lumbar: { startDate: null, baseline: null, changes: [], logs: {} },
 };
 let progressView = 'sessions';
 
@@ -736,12 +796,13 @@ function migrateState(){
     });
     state.migrated_v3 = true;
   }
+  if(!state.lumbar) state.lumbar={startDate:null,baseline:null,changes:[],logs:{}};
 }
 function loadState(){
   // Try local cache first for instant load, then sync from server
   try {
     const local = JSON.parse(localStorage.getItem('atlas-state-v2') || '{}');
-    if (local && Object.keys(local).length > 0) { state = { ...state, ...local }; migrateState(); }
+    if (local && Object.keys(local).length > 0) { state = { ...state, ...local }; migrateState(); lmbGateInit(); }
   } catch(e){}
   // Fetch from server and update
   fetch('/api/atlas-state').then(r=>r.json()).then(data=>{
@@ -751,6 +812,7 @@ function loadState(){
       state.selectedDayOffset = (new Date().getDay()===0 ? 6 : new Date().getDay()-1);
       try { localStorage.setItem('atlas-state-v2', JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
+      lmbGateInit();
       if(!state.nutritionProfile) startNutOb(false);
     }
   }).catch(()=>{});
@@ -2683,6 +2745,7 @@ function goToTab(panel){
   if (panel==='perfil') renderPerfil();
   if (panel==='progress') renderProgress();
   if (panel==='metrics') renderMetrics();
+  if (panel==='lumbar') renderLumbar();
   window.scrollTo(0,0);
 }
 
@@ -2700,6 +2763,349 @@ state.selectedSessionIndex = 0;
 renderHeader();
 renderDashboard();
 // Service worker disabled in multi-user mode
+</script>
+<script>
+/* ── Lumbar Protocol ── */
+const LMB_USER = 'alejandro.rio@begreatconsulting.es';
+
+function lmbIsUser(){ return (window.__atlasUserEmail||'')===LMB_USER; }
+
+function lmbGateInit(){
+  const tab = document.getElementById('tab-lumbar');
+  if(tab) tab.style.display = lmbIsUser() ? '' : 'none';
+}
+
+function lmbWeek(){
+  if(!state.lumbar||!state.lumbar.startDate) return 1;
+  const diff = Math.floor((new Date() - strToDate(state.lumbar.startDate)) / (7*86400000));
+  return Math.max(1, diff+1);
+}
+
+function lmbPhase(){ return lmbWeek()>=3 ? 2 : 1; }
+
+function lmbIsUnlocked(blockId){
+  if(blockId!=='gluteo') return true;
+  return lmbWeek() >= LUMBAR_PROGRAM.gluteo.unlocksWeek;
+}
+
+function lmbLog(dateStr){ return (state.lumbar&&state.lumbar.logs&&state.lumbar.logs[dateStr])||{}; }
+
+function lmbSaveLog(dateStr, patch){
+  if(!state.lumbar) state.lumbar={startDate:null,baseline:null,changes:[],logs:{}};
+  if(!state.lumbar.logs) state.lumbar.logs={};
+  state.lumbar.logs[dateStr] = {...lmbLog(dateStr), ...patch};
+  saveState();
+}
+
+function renderLumbar(){
+  if(!lmbIsUser()){ goToTab('dashboard'); return; }
+  const cont = document.getElementById('lumbar-content');
+  if(!cont) return;
+  if(!state.lumbar||!state.lumbar.startDate){ cont.innerHTML=lmbBaselineHtml(); return; }
+  const week=lmbWeek(), phase=lmbPhase();
+  const phaseName = phase===1 ? 'Fase 1 — Cimientos' : 'Fase 2 — Carga';
+  const today=todayStr(), log=lmbLog(today), dow=new Date().getDay();
+  cont.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <span class="lmb-badge lmb-phase-badge">${phaseName.toUpperCase()}</span>
+      <span class="lmb-badge lmb-week-badge">SEMANA ${week}</span>
+    </div>
+    <div class="section-label">Checklist de hoy</div>
+    ${Object.values(LUMBAR_PROGRAM).map(b=>lmbBlockHtml(b,log,dow)).join('')}
+    <div class="section-label" style="margin-top:20px">Síntomas de hoy</div>
+    ${lmbSymptomsHtml(today,log)}
+    <div style="margin-top:16px">
+      <button onclick="lmbOpenChanges()" style="width:100%;background:var(--bg-elev);border:1px solid var(--line);color:var(--ink-dim);padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:2px">+ REGISTRAR CAMBIO</button>
+    </div>
+    <div style="margin-top:10px">
+      <button onclick="lmbOpenProgress()" style="width:100%;background:var(--bg-elev);border:1px solid var(--line);color:var(--ink-dim);padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:2px">↗ VER PROGRESO</button>
+    </div>`;
+}
+
+function lmbBlockHtml(b, log, dow){
+  const unlocked = lmbIsUnlocked(b.id);
+  const keyMap = {movilidad:'mov',big3:'big3',gluteo:'glut'};
+  const done = !!log[keyMap[b.id]];
+  const exRows = b.exercises.map(ex=>`
+    <div class="lmb-ex-row">
+      <div style="flex:1">
+        <div class="lmb-ex-name">${ex.name}</div>
+        <div class="lmb-ex-dose">${ex.sets} · ${ex.reps}</div>
+      </div>
+      <div class="lmb-ex-id">${ex.id}</div>
+    </div>`).join('');
+  const lockTag = b.unlocksWeek&&!unlocked ? `<div class="lmb-locked-tag">SEMANA ${b.unlocksWeek} →</div>` :
+                  b.unlocksWeek&&unlocked  ? `<div class="lmb-locked-tag" style="color:var(--green);border-color:var(--green)">ACTIVO</div>` : '';
+  const checkBtn = unlocked ? `<button class="lmb-check-btn${done?' done':''}" onclick="lmbToggle('${b.id}')">
+    ${done?`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+  </button>` : '';
+  return `<div class="lmb-block${unlocked?'':' locked'}">
+    <div class="lmb-block-head">
+      <div>
+        <div class="lmb-block-title">${b.label}</div>
+        <div class="lmb-freq">${b.freq}</div>
+        ${lockTag}
+      </div>
+      ${checkBtn}
+    </div>
+    ${exRows}
+  </div>`;
+}
+
+function lmbSymptomsHtml(dateStr, log){
+  const pain=log.pain??0, stiff=log.stiff??0, nightYes=!!log.nightYes, nightVal=log.nightVal??0, runMins=log.runMins??'';
+  return `<div class="lmb-block">
+    <div class="lmb-sl-row">
+      <span class="lmb-sl-lbl">DOLOR LUMBAR · HOY</span>
+      <span class="lmb-sl-val" id="lv-pain">${pain}</span>
+      <input type="range" min="0" max="10" value="${pain}" style="width:120px;accent-color:var(--accent)"
+        oninput="document.getElementById('lv-pain').textContent=this.value"
+        onchange="lmbSaveLog('${dateStr}',{pain:+this.value})">
+    </div>
+    <div class="lmb-sl-row">
+      <span class="lmb-sl-lbl">RIGIDEZ AL LEVANTARME</span>
+      <span class="lmb-sl-val" id="lv-stiff">${stiff}</span>
+      <input type="range" min="0" max="10" value="${stiff}" style="width:120px;accent-color:var(--accent)"
+        oninput="document.getElementById('lv-stiff').textContent=this.value"
+        onchange="lmbSaveLog('${dateStr}',{stiff:+this.value})">
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="lmb-sl-lbl">MOLESTIA NOCTURNA ANOCHE</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0">
+          <input type="checkbox" id="lv-night-chk" ${nightYes?'checked':''}
+            onchange="lmbNightToggle('${dateStr}',this.checked)"
+            style="width:16px;height:16px;accent-color:var(--accent)">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--ink-dim)">SÍ</span>
+        </label>
+      </div>
+      <div id="lv-night-int" style="${nightYes?'':'display:none'};margin-top:8px">
+        <div class="lmb-sl-row" style="margin-bottom:0;padding-left:8px">
+          <span class="lmb-sl-lbl">Intensidad</span>
+          <span class="lmb-sl-val" id="lv-nightval">${nightVal}</span>
+          <input type="range" min="0" max="10" value="${nightVal}" style="width:120px;accent-color:var(--accent)"
+            oninput="document.getElementById('lv-nightval').textContent=this.value"
+            onchange="lmbSaveLog('${dateStr}',{nightVal:+this.value})">
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span class="lmb-sl-lbl">MIN. CORRIENDO HASTA MOLESTIA</span>
+      <input type="number" min="0" max="240" class="lmb-run-inp" value="${runMins}" placeholder="—"
+        onchange="lmbSaveLog('${dateStr}',{runMins:this.value?+this.value:null})">
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">NOTA DEL DÍA</div>
+      <textarea class="lmb-textarea" placeholder="¿Algo destacable hoy?"
+        onchange="lmbSaveLog('${dateStr}',{note:this.value})">${log.note||''}</textarea>
+    </div>
+  </div>`;
+}
+
+function lmbBaselineHtml(){
+  return `<div>
+    <div class="section-label">Lumbar Protocol · Inicio</div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:var(--serif);font-size:15px;color:var(--ink);margin-bottom:8px">Captura tus valores de partida</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ink-dim);line-height:1.6">En unas semanas compararás contra estos números. Pon lo más honesto posible.</div>
+    </div>
+    <div class="lmb-block">
+      <div class="lmb-sl-row">
+        <span class="lmb-sl-lbl">MIN. CORRIENDO HASTA MOLESTIA</span>
+        <input type="number" min="0" max="240" class="lmb-run-inp" id="bl-run" placeholder="0">
+      </div>
+      <div class="lmb-sl-row">
+        <span class="lmb-sl-lbl">MOLESTIA NOCTURNA TÍPICA (0-10)</span>
+        <span class="lmb-sl-val" id="bl-v-night">0</span>
+        <input type="range" min="0" max="10" value="0" style="width:120px;accent-color:var(--accent)"
+          oninput="document.getElementById('bl-v-night').textContent=this.value" id="bl-night">
+      </div>
+      <div class="lmb-sl-row" style="margin-bottom:0">
+        <span class="lmb-sl-lbl">RIGIDEZ MATINAL TÍPICA (0-10)</span>
+        <span class="lmb-sl-val" id="bl-v-stiff">0</span>
+        <input type="range" min="0" max="10" value="0" style="width:120px;accent-color:var(--accent)"
+          oninput="document.getElementById('bl-v-stiff').textContent=this.value" id="bl-stiff">
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-faint);margin:12px 0 6px">FECHA DE INICIO</div>
+    <div class="lmb-block" style="margin-bottom:20px">
+      <input type="date" id="bl-start" value="${todayStr()}"
+        style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:13px;border-radius:2px;width:100%;box-sizing:border-box;outline:none">
+    </div>
+    <button onclick="lmbSaveBaseline()" style="width:100%;background:var(--accent);color:#fff;border:none;padding:16px;font-family:var(--mono);font-size:12px;letter-spacing:.2em;cursor:pointer;border-radius:2px">COMENZAR PROTOCOLO →</button>
+  </div>`;
+}
+
+function lmbSaveBaseline(){
+  const run  = +document.getElementById('bl-run').value||null;
+  const night= +document.getElementById('bl-night').value;
+  const stiff= +document.getElementById('bl-stiff').value;
+  const startDate = document.getElementById('bl-start').value||todayStr();
+  if(!state.lumbar) state.lumbar={startDate:null,baseline:null,changes:[],logs:{}};
+  state.lumbar.baseline = {runMins:run, painNight:night, stiffMorn:stiff};
+  state.lumbar.startDate = startDate;
+  saveState(); showToast('¡Protocolo iniciado! 🦴'); renderLumbar();
+}
+
+function lmbToggle(blockId){
+  const today=todayStr(), log=lmbLog(today);
+  const km={movilidad:'mov',big3:'big3',gluteo:'glut'};
+  lmbSaveLog(today,{[km[blockId]]:!log[km[blockId]]});
+  renderLumbar();
+}
+
+function lmbNightToggle(dateStr, checked){
+  lmbSaveLog(dateStr,{nightYes:checked});
+  const el=document.getElementById('lv-night-int');
+  if(el) el.style.display=checked?'':'none';
+}
+
+function lmbOpenChanges(){
+  const changes=(state.lumbar&&state.lumbar.changes)||[];
+  const list=changes.length?changes.slice().reverse().map(c=>`
+    <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);flex-shrink:0">${fmtDate(c.date)}</span>
+      <span style="font-family:var(--serif);font-size:13px;color:var(--ink);flex:1">${c.note}</span>
+    </div>`).join('') :
+    `<div style="font-family:var(--mono);font-size:10px;color:var(--ink-faint);padding:12px 0">Sin cambios aún</div>`;
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">CAMBIOS REGISTRADOS</div>
+    <div class="modal-sub">Intervenciones · variables controladas</div>
+    <div style="margin:12px 0 16px">${list}</div>
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">NUEVO CAMBIO</div>
+    <textarea id="lmb-ch-txt" class="lmb-textarea" placeholder="Ej: plantilla nueva, añadí hip thrust…" style="min-height:60px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button onclick="lmbAddChange()" style="flex:1;background:var(--accent);color:#fff;border:none;padding:12px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer;border-radius:2px">GUARDAR</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('active');
+}
+
+function lmbAddChange(){
+  const note=document.getElementById('lmb-ch-txt').value.trim();
+  if(!note) return;
+  if(!state.lumbar.changes) state.lumbar.changes=[];
+  state.lumbar.changes.push({date:todayStr(),note});
+  saveState(); closeModal(); showToast('Cambio registrado ✓');
+}
+
+/* ── Progress modal ── */
+function lmbOpenProgress(){
+  const logs=state.lumbar&&state.lumbar.logs||{};
+  const changes=state.lumbar&&state.lumbar.changes||[];
+  const baseline=state.lumbar&&state.lumbar.baseline;
+
+  // Collect sorted dates with data
+  const dates=Object.keys(logs).sort();
+  if(dates.length<2){
+    document.getElementById('modal-content').innerHTML=`
+      <div class="modal-title">PROGRESO LUMBAR</div>
+      <div class="modal-sub">Necesitas al menos 2 días registrados</div>
+      <button class="btn btn-secondary" style="margin-top:16px;width:100%" onclick="closeModal()">Cerrar</button>`;
+    document.getElementById('modal-bg').classList.add('active');
+    return;
+  }
+
+  // 7-day rolling average helper
+  function rolling(arr, key){
+    return arr.map((_,i)=>{
+      const slice=arr.slice(Math.max(0,i-6),i+1).map(d=>logs[d]&&logs[d][key]!=null?+logs[d][key]:null).filter(v=>v!==null);
+      return slice.length?slice.reduce((a,b)=>a+b,0)/slice.length:null;
+    });
+  }
+
+  const painVals=dates.map(d=>logs[d].pain!=null?+logs[d].pain:null);
+  const stiffVals=dates.map(d=>logs[d].stiff!=null?+logs[d].stiff:null);
+  const runVals=dates.map(d=>logs[d].runMins!=null?+logs[d].runMins:null);
+  const painRoll=rolling(dates,'pain');
+  const stiffRoll=rolling(dates,'stiff');
+
+  const changeDates=new Set(changes.map(c=>c.date));
+
+  function miniChart(vals,rollVals,color,maxY,label,unit){
+    const W=320,H=90,PL=28,PR=12,PT=10,PB=20;
+    const xR=W-PL-PR, yR=H-PT-PB;
+    const n=dates.length;
+    const toX=i=>PL+i/(Math.max(n-1,1))*xR;
+    const toY=v=>v==null?null:PT+(1-Math.min(v,maxY)/maxY)*yR;
+    const rawPts=vals.map((v,i)=>[toX(i),toY(v)]).filter(p=>p[1]!==null);
+    const rawPath=rawPts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    const rollPts=rollVals.map((v,i)=>[toX(i),toY(v)]).filter(p=>p[1]!==null);
+    const rollPath=rollPts.length>1?rollPts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '):'';
+    // change markers
+    const markers=dates.map((d,i)=>changeDates.has(d)?`<line x1="${toX(i).toFixed(1)}" y1="${PT}" x2="${toX(i).toFixed(1)}" y2="${H-PB}" stroke="#6ab0e0" stroke-width="1" stroke-dasharray="3,2" opacity="0.7"/>`:'' ).join('');
+    // dots for raw
+    const dots=rawPts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${color}" opacity="0.5"/>`).join('');
+    const yLabels=[0,maxY/2,maxY].map(v=>`<text x="${PL-4}" y="${(toY(v)+3.5).toFixed(1)}" text-anchor="end" font-size="8" fill="#555049">${v}</text>`).join('');
+    const xFirst=fmtDate(dates[0]), xLast=fmtDate(dates[dates.length-1]);
+    return `<div style="margin-bottom:20px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:6px">${label}${unit?' ('+unit+')':''}</div>
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible;font-family:ui-monospace,monospace">
+        <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#2a2a2a"/>
+        <line x1="${PL}" y1="${H-PB}" x2="${PL+xR}" y2="${H-PB}" stroke="#2a2a2a"/>
+        ${yLabels}
+        ${markers}
+        ${rawPath?`<path d="${rawPath}" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>`:'' }
+        ${rollPath?`<path d="${rollPath}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`:'' }
+        ${dots}
+        <text x="${PL}" y="${H}" font-size="8" fill="#555049">${xFirst}</text>
+        <text x="${PL+xR}" y="${H}" text-anchor="end" font-size="8" fill="#555049">${xLast}</text>
+      </svg></div>`;
+  }
+
+  // Weekly adherence
+  function weekAdh(){
+    if(dates.length<1) return '';
+    const weeks={};
+    dates.forEach(d=>{
+      const wk=getWeekKey(strToDate(d));
+      if(!weeks[wk]) weeks[wk]={mov:0,big3:0,glut:0,days:0};
+      const lg=logs[d]||{};
+      weeks[wk].days++;
+      if(lg.mov) weeks[wk].mov++;
+      if(lg.big3) weeks[wk].big3++;
+      if(lg.glut) weeks[wk].glut++;
+    });
+    return Object.entries(weeks).slice(-4).map(([wk,w])=>{
+      const movPct=Math.round(w.mov/w.days*100);
+      const big3Pct=Math.round(w.big3/Math.min(w.days,3)*100);
+      const glPct=w.glut>0?Math.round(w.glut/Math.min(w.days,3)*100):null;
+      return `<div style="margin-bottom:12px">
+        <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);margin-bottom:6px">${wk}</div>
+        ${adhBar('Movilidad',movPct,'var(--green)')}
+        ${adhBar('Big 3',big3Pct,'#6ab0e0')}
+        ${glPct!==null?adhBar('Glúteo',glPct,'var(--purple)'):''}
+      </div>`;
+    }).join('');
+  }
+  function adhBar(label,pct,color){
+    return `<div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--ink-dim);margin-bottom:3px"><span>${label}</span><span>${Math.min(pct,100)}%</span></div>
+      <div class="lmb-adh-bar"><div class="lmb-adh-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+    </div>`;
+  }
+
+  const baseHtml=baseline?`<div class="lmb-block" style="margin-bottom:16px">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);margin-bottom:10px">BASELINE (INICIO)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+      <div><div style="font-family:var(--display);font-size:22px;color:var(--ink)">${baseline.runMins??'—'}</div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">MIN CORR.</div></div>
+      <div><div style="font-family:var(--display);font-size:22px;color:var(--ink)">${baseline.painNight??'—'}</div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">DOLOR NOCHE</div></div>
+      <div><div style="font-family:var(--display);font-size:22px;color:var(--ink)">${baseline.stiffMorn??'—'}</div><div style="font-family:var(--mono);font-size:8px;color:var(--ink-faint)">RIGIDEZ</div></div>
+    </div>
+  </div>`:'';
+
+  document.getElementById('modal-content').innerHTML=`
+    <div class="modal-title">PROGRESO LUMBAR</div>
+    <div class="modal-sub" style="margin-bottom:16px">${dates.length} días registrados · línea gruesa = media 7d · <span style="color:#6ab0e0">|</span> cambio</div>
+    ${baseHtml}
+    ${miniChart(painVals,painRoll,'var(--accent)',10,'DOLOR LUMBAR · DIARIO','/10')}
+    ${miniChart(stiffVals,stiffRoll,'#b08fc7',10,'RIGIDEZ MATINAL','/10')}
+    ${runVals.some(v=>v!==null)?miniChart(runVals,runVals,'var(--green)',Math.max(30,...runVals.filter(v=>v!==null))+5,'MINUTOS CORRIENDO','min'):''}
+    <div class="section-label" style="margin-top:4px">Adherencia semanal</div>
+    ${weekAdh()}
+    <button class="btn btn-secondary" style="margin-top:8px;width:100%" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-bg').classList.add('active');
+}
 </script>
 <script>
 /* ── Exercise library ── */
