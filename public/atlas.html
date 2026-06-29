@@ -3106,6 +3106,8 @@ function lmbOpenProgress(){
     <button class="btn btn-secondary" style="margin-top:8px;width:100%" onclick="closeModal()">Cerrar</button>`;
   document.getElementById('modal-bg').classList.add('active');
 }
+// Run after the route.ts email injection (last <script> tag) has executed
+setTimeout(lmbGateInit, 0);
 </script>
 <script>
 /* ── Exercise library ── */
