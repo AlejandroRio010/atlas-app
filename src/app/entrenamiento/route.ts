@@ -12,8 +12,10 @@ export async function GET() {
 
   const name = session.user?.name ?? "Atleta";
   const email = session.user?.email ?? "";
+  const userId = session.user?.id ?? "anon";
   html = html.replace("Alejandro · Atleta", `${name} · Atleta`);
-  html = html.replace("</body>", `<script>window.__atlasUserName=${JSON.stringify(name)};window.__atlasUserEmail=${JSON.stringify(email)};</script></body>`);
+  // Inject identity at top of <body> so it's available before any script runs
+  html = html.replace("<body>", `<body><script>window.__atlasUserId=${JSON.stringify(userId)};window.__atlasUserEmail=${JSON.stringify(email)};window.__atlasUserName=${JSON.stringify(name)};</script>`);
 
   return new Response(html, {
     headers: {

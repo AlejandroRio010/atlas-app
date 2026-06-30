@@ -798,10 +798,13 @@ function migrateState(){
   }
   if(!state.lumbar) state.lumbar={startDate:null,baseline:null,changes:[],logs:{}};
 }
+// Per-user localStorage key — prevents cross-user cache bleed
+const _CACHE_KEY = 'atlas-v3-' + (window.__atlasUserId || 'anon');
+
 function loadState(){
   // Try local cache first for instant load, then sync from server
   try {
-    const local = JSON.parse(localStorage.getItem('atlas-state-v2') || '{}');
+    const local = JSON.parse(localStorage.getItem(_CACHE_KEY) || '{}');
     if (local && Object.keys(local).length > 0) { state = { ...state, ...local }; migrateState(); lmbGateInit(); }
   } catch(e){}
   // Fetch from server and update
@@ -810,7 +813,7 @@ function loadState(){
       state = { ...state, ...data.state };
       migrateState();
       state.selectedDayOffset = (new Date().getDay()===0 ? 6 : new Date().getDay()-1);
-      try { localStorage.setItem('atlas-state-v2', JSON.stringify(state)); } catch(e){}
+      try { localStorage.setItem(_CACHE_KEY, JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
       lmbGateInit();
       if(!state.nutritionProfile) startNutOb(false);
@@ -818,7 +821,7 @@ function loadState(){
   }).catch(()=>{});
 }
 function saveState(){
-  try { localStorage.setItem('atlas-state-v2', JSON.stringify(state)); } catch(e){}
+  try { localStorage.setItem(_CACHE_KEY, JSON.stringify(state)); } catch(e){}
   clearTimeout(window.__saveTimer);
   window.__saveTimer = setTimeout(()=>{
     fetch('/api/atlas-state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state})}).catch(()=>{});
@@ -1522,7 +1525,7 @@ function closeDoneOverlay(){
 }
 
 function exportData(){
-  const data = localStorage.getItem('atlas-state-v2');
+  const data = localStorage.getItem(_CACHE_KEY);
   if (!data) { showToast('No hay datos guardados'); return; }
   const blob = new Blob([data], { type: 'application/json' });
   const a = document.createElement('a');
@@ -1540,7 +1543,7 @@ function importData(e){
   reader.onload = ev => {
     try {
       const parsed = JSON.parse(ev.target.result);
-      localStorage.setItem('atlas-state-v2', JSON.stringify(parsed));
+      localStorage.setItem(_CACHE_KEY, JSON.stringify(parsed));
       showToast('Datos restaurados — recargando…');
       setTimeout(() => location.reload(), 1200);
     } catch {
