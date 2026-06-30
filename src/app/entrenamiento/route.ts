@@ -13,9 +13,11 @@ export async function GET() {
   const name = session.user?.name ?? "Atleta";
   const email = session.user?.email ?? "";
   const userId = session.user?.id ?? "anon";
+  const canLumbar = email === "alejandro.rio@begreatconsulting.es";
   html = html.replace("Alejandro · Atleta", `${name} · Atleta`);
   // Inject identity at top of <body> so it's available before any script runs
-  html = html.replace("<body>", `<body><script>window.__atlasUserId=${JSON.stringify(userId)};window.__atlasUserEmail=${JSON.stringify(email)};window.__atlasUserName=${JSON.stringify(name)};</script>`);
+  // canLumbar is a boolean — the email itself never reaches the client
+  html = html.replace("<body>", `<body><script>window.__atlasUserId=${JSON.stringify(userId)};window.__atlasUserEmail=${JSON.stringify(email)};window.__atlasUserName=${JSON.stringify(name)};window.__atlasCanLumbar=${canLumbar};</script>`);
 
   return new Response(html, {
     headers: {

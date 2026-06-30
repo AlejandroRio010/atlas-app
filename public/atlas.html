@@ -2769,9 +2769,7 @@ renderDashboard();
 </script>
 <script>
 /* ── Lumbar Protocol ── */
-const LMB_USER = 'alejandro.rio@begreatconsulting.es';
-
-function lmbIsUser(){ return (window.__atlasUserEmail||'')===LMB_USER; }
+function lmbIsUser(){ return !!window.__atlasCanLumbar; }
 
 function lmbGateInit(){
   const tab = document.getElementById('tab-lumbar');
