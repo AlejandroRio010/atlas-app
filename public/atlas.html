@@ -855,7 +855,7 @@ function getWeekPlan(weekDate){
     const prevKey = getWeekKey(prev);
     if (state.weeklyPlans[prevKey]){
       const copy = {};
-      Object.keys(state.weeklyPlans[prevKey]).forEach(d=>{ copy[d] = [...state.weeklyPlans[prevKey][d]]; });
+      Object.keys(state.weeklyPlans[prevKey]).forEach(d=>{ const a=state.weeklyPlans[prevKey][d]; copy[d]=(a&&a.length)?[...a]:['descanso']; });
       state.weeklyPlans[key] = copy;
     } else {
       const copy = {};
@@ -869,14 +869,16 @@ function getWeekPlan(weekDate){
 function getSessionsForDate(dateStr){
   const d = strToDate(dateStr);
   const plan = getWeekPlan(d);
-  const arr = plan[d.getDay()] || ['descanso'];
+  const arr = plan[d.getDay()];
+  if (!arr || !arr.length) return [ROUTINES.descanso];
   return arr.map(k => ROUTINES[k] || ROUTINES.descanso);
 }
 
 function getRoutineKeysForDate(dateStr){
   const d = strToDate(dateStr);
   const plan = getWeekPlan(d);
-  return plan[d.getDay()] || ['descanso'];
+  const arr = plan[d.getDay()];
+  return (arr && arr.length) ? arr : ['descanso'];
 }
 
 function getEffectiveExercises(routineKey){
@@ -2101,9 +2103,9 @@ function deleteRecipe(id){
 
 const RUTINA_TEMPLATES = [
   { id:'v1', nombre:'V1 – Rutina actual', descripcion:'Pierna · Pecho/Tríceps · Espalda/Bíceps · Velocidad', color:'var(--accent)',
-    plan:{ lun:['gym-pierna'], mar:[], mie:['gym-pecho'], jue:[], vie:['gym-espalda'], sab:['gym-velocidad'], dom:[] } },
+    plan:{ lun:['pierna'], mar:['descanso'], mie:['empuje'], jue:['descanso'], vie:['tiron'], sab:['cardio'], dom:['descanso'] } },
   { id:'fullbody', nombre:'Full Body 3 días', descripcion:'Cuerpo completo lunes, miércoles, viernes', color:'var(--blue)',
-    plan:{ lun:['gym-fullbody'], mie:['gym-fullbody'], vie:['gym-fullbody'], mar:[], jue:[], sab:[], dom:[] } },
+    plan:{ lun:['empuje'], mie:['tiron'], vie:['pierna'], mar:['descanso'], jue:['descanso'], sab:['descanso'], dom:['descanso'] } },
 ];
 
 function renderRutina(){
@@ -2159,7 +2161,7 @@ function activarRutina(id){
     const dayDate = new Date(mon); dayDate.setDate(mon.getDate()+i);
     const dayStr = dateToStr(dayDate);
     const hasPastData = dayStr < todayStr() && state.workouts[dayStr] && Object.values(state.workouts[dayStr]).some(e=>e.sets&&e.sets.some(s=>s&&s.kg));
-    if (!hasPastData) state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : [];
+    if (!hasPastData) state.weeklyPlans[weekKey][dow[i]] = (t.plan[d]||[]).length ? t.plan[d] : ['descanso'];
   });
 
   // For custom routines, inject exercises into ROUTINES so gym section can show them
@@ -2384,8 +2386,8 @@ function _rwEliminar(){
 function _rwSave(){
   if(!_rw.dias[_rw.curDia].dow){showToast('Elige el día de la semana');return;}
   const diasObj={}, planObj={};
-  _rw.dias.forEach(d=>{ const dk=_DOW_TO_DK[d.dow]; if(dk){ diasObj[dk]=d.ejercicios; planObj[dk]=d.ejercicios.length?['gym-custom-'+dk]:[]; } });
-  DIAS_KEYS.forEach(dk=>{ if(!planObj[dk]) planObj[dk]=[]; });
+  _rw.dias.forEach(d=>{ const dk=_DOW_TO_DK[d.dow]; if(dk){ diasObj[dk]=d.ejercicios; planObj[dk]=d.ejercicios.length?['gym-custom-'+dk]:['descanso']; } });
+  DIAS_KEYS.forEach(dk=>{ if(!planObj[dk]) planObj[dk]=['descanso']; });
   const desc=_rw.dias.filter(d=>d.dow).map(d=>DIAS_LABELS[DIAS_KEYS.indexOf(_DOW_TO_DK[d.dow])]).join(' · ');
   if(!state.customRoutines) state.customRoutines=[];
   const newR={ id:_rw.editingId||'custom-'+uid(), nombre:_rw.nombre, descripcion:desc, dias:diasObj, plan:planObj };
