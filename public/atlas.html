@@ -267,9 +267,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="stats-grid">
 <div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">Peso actual</div><div class="stat-value" id="stat-weight">—<span class="stat-unit">kg</span></div><div class="stat-trend" id="stat-weight-trend">Sin datos</div></div>
 <div class="stat-card"><div class="stat-label">Sesiones gym</div><div class="stat-value" id="stat-sessions">0<span class="stat-unit">/3</span></div><div class="stat-trend">Esta semana</div></div>
-<div class="stat-card"><div class="stat-label">Kilos semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Sesiones terminadas · reset lunes</div></div>
-<div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">% objetivo</div><div class="stat-value" id="stat-goal">—<span class="stat-unit">%</span></div><div class="stat-trend" id="stat-goal-trend">Define tu objetivo</div></div>
+<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">Kilos semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Sesiones terminadas · reset lunes</div></div>
 </div>
+<div id="today-meals"></div>
 <div class="section-label">Plan de la semana</div>
 <div class="week-grid" id="week-grid-dashboard"></div>
 <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.1em;margin-bottom:24px;text-align:center">Toca cualquier día para ver / editar →</div>
@@ -957,17 +957,6 @@ function renderDashboard(){
     t.textContent = (diff>=0?'+':'') + diff.toFixed(1) + ' kg vs anterior';
     t.className = 'stat-trend ' + (diff<0?'down':diff>0?'up':'');
   }
-  const goalTrend = document.getElementById('stat-goal-trend');
-  if (last && state.goalWeight && weights[0].kg !== state.goalWeight){
-    const start = weights[0].kg, target = state.goalWeight;
-    const pct = Math.max(0, Math.min(100, Math.round(((start - last.kg)/(start - target))*100)));
-    document.getElementById('stat-goal').innerHTML = `${pct}<span class="stat-unit">%</span>`;
-    if (goalTrend) goalTrend.textContent = 'Hacia ' + target.toFixed(1) + ' kg';
-  } else {
-    document.getElementById('stat-goal').innerHTML = `—<span class="stat-unit">%</span>`;
-    if (goalTrend) goalTrend.textContent = state.goalWeight ? ('Hacia ' + state.goalWeight.toFixed(1) + ' kg') : 'Define tu objetivo';
-  }
-
   // Solo cuentan las sesiones donde se pulsó "Terminar sesión" — se resetea cada lunes
   const monday = getCurrentMonday();
   let totalVol=0, gymSessions=0;
@@ -984,6 +973,7 @@ function renderDashboard(){
   document.getElementById('stat-volume').innerHTML = volDisplay;
   document.getElementById('stat-sessions').innerHTML = `${gymSessions}<span class="stat-unit">/3</span>`;
 
+  renderTodayMeals();
   renderWeekGridDashboard();
   const q = QUOTES[new Date().getDate() % QUOTES.length];
   document.getElementById('quote-text').textContent = '"' + q.t + '"';
@@ -2097,12 +2087,34 @@ const MEAL_SLOTS = [
 
 function getRecipeById(id){ return getAllRecipes().find(r=>r.id===id) || null; }
 
+// Hábitos diarios marcables desde el plan semanal.
+// La creatina comparte id con "Suplementos hoy" (Recetas): marcarla aquí la marca allí.
+const DAILY_HABITS = [
+  { id:'agua',     name:'Beber 2L de agua', detail:'Repartidos durante el día', icon:'💧' },
+  { id:'creatina', name:'Creatina',         detail:'1 cazo pequeño · da igual la hora', icon:'C' },
+];
+
+function toggleDailyHabit(id){
+  const dStr = todayStr();
+  if (!state.supplementsLog[dStr]) state.supplementsLog[dStr] = {};
+  state.supplementsLog[dStr][id] = !state.supplementsLog[dStr][id];
+  saveState();
+  renderMealPlan();
+}
+
 function renderMealPlan(){
   const wrap = document.getElementById('meal-plan-wrap');
   if (!wrap) return;
   if (!state.mealPlan) state.mealPlan = {};
   const todayIdx = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
-  let html = `<div class="section-label">Plan semanal de comidas</div>`;
+  const hlog = state.supplementsLog[todayStr()] || {};
+  let html = `<div class="section-label">Hábitos de hoy</div>` + DAILY_HABITS.map(h=>`
+    <div class="suppl-card ${hlog[h.id]?'done':''}" onclick="toggleDailyHabit('${h.id}')">
+      <div class="suppl-icon">${h.icon}</div>
+      <div class="suppl-info"><div class="suppl-name">${h.name}</div><div class="suppl-detail">${h.detail}</div></div>
+      <div class="check-mark ${hlog[h.id]?'checked':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+    </div>`).join('');
+  html += `<div class="section-label" style="margin-top:24px">Plan semanal de comidas</div>`;
   DIAS_KEYS.forEach((dk,i)=>{
     const isToday = i===todayIdx;
     const dayPlan = state.mealPlan[dk] || {};
@@ -2157,6 +2169,43 @@ function setMealSlot(dk, slotK, recipeId){
   saveState();
   closeModal();
   renderMealPlan();
+  renderTodayMeals();
+}
+
+// "Comida de hoy" en el dashboard — las comidas del plan semanal para hoy
+function renderTodayMeals(){
+  const el = document.getElementById('today-meals');
+  if (!el) return;
+  const dk = DIAS_KEYS[(todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1)];
+  const dayPlan = (state.mealPlan && state.mealPlan[dk]) || {};
+  let totalKcal = 0;
+  const rows = MEAL_SLOTS.map(s=>{
+    const r = dayPlan[s.k] ? getRecipeById(dayPlan[s.k]) : null;
+    if (!r) return '';
+    totalKcal += (r.kcal||0);
+    return `<div onclick="openRecipeDetail('${r.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer">
+      <div style="min-width:0;flex:1">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint)">${s.label.toUpperCase()}</div>
+        <div style="font-family:var(--serif);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);flex-shrink:0;margin-left:8px">${r.kcal} kcal</div>
+    </div>`;
+  }).join('');
+  if (!rows){
+    el.innerHTML = `<div class="section-label">Comida de hoy</div>
+      <div class="card" onclick="goToTab('food')" style="cursor:pointer;text-align:center;padding:18px;margin-bottom:24px">
+        <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim)">Sin plan para hoy · toca para montar tu plan semanal →</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="section-label">Comida de hoy</div>
+    <div class="card" style="margin-bottom:24px">
+      ${rows}
+      <div style="display:flex;justify-content:space-between;padding-top:10px">
+        <div onclick="goToTab('food')" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint);cursor:pointer">VER PLAN COMPLETO →</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent)">≈ ${totalKcal} kcal</div>
+      </div>
+    </div>`;
 }
 
 function toggleSupplement(id){
