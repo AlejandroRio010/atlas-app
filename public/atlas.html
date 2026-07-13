@@ -261,6 +261,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 
 <div class="panel active" id="panel-dashboard">
 <div id="nut-notify"></div>
+<div id="legacy-recover"></div>
 <div class="hero-card clickable" onclick="goToWorkout()"><div class="hero-label">Hoy <span id="today-name"></span></div><div class="hero-title" id="today-workout">—</div><div class="hero-sub" id="today-detail">Cargando…</div><button class="hero-cta">Ver sesión →</button></div>
 <div class="section-label">Métricas</div>
 <div class="stats-grid">
@@ -819,6 +820,32 @@ function saveState(){
     fetch('/api/atlas-state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state})}).catch(()=>{});
   }, 1500);
 }
+
+// Recuperación de pesos que quedaron en cachés antiguos del dispositivo (claves v2/v3).
+// Se excluyen los 2 registros de referencia que la app sembraba a todos los usuarios.
+function findLegacyWeights(){
+  const SEEDS = [{date:'2026-01-19',kg:80.5},{date:'2026-03-11',kg:78.8}];
+  const isSeed = w => SEEDS.some(s=>s.date===w.date && s.kg===w.kg);
+  const have = new Set((state.weights||[]).map(w=>w.date));
+  const found = [];
+  ['atlas-state-v2','atlas-v3-'+(window.__atlasUserId||'anon')].forEach(key=>{
+    try {
+      const old = JSON.parse(localStorage.getItem(key)||'{}');
+      (old.weights||[]).forEach(w=>{
+        if (w && w.date && typeof w.kg==='number' && !isSeed(w) && !have.has(w.date) && !found.some(f=>f.date===w.date)) found.push({date:w.date,kg:w.kg});
+      });
+    } catch(e){}
+  });
+  return found.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function restoreLegacyWeights(){
+  const found = findLegacyWeights();
+  if (!found.length) return;
+  state.weights = (state.weights||[]).concat(found).sort((a,b)=>a.date.localeCompare(b.date));
+  saveState();
+  showToast(found.length===1 ? '1 peso recuperado ✓' : found.length+' pesos recuperados ✓');
+  renderDashboard();
+}
 function _localDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function todayStr(){ return _localDateStr(new Date()); }
 function dateToStr(d){ return _localDateStr(d); }
@@ -903,6 +930,22 @@ function renderDashboard(){
       </div>`;
     } else {
       notifyEl.innerHTML='';
+    }
+  }
+  const legEl = document.getElementById('legacy-recover');
+  if (legEl){
+    const legacy = findLegacyWeights();
+    if (legacy.length){
+      legEl.innerHTML = `<div style="display:flex;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:4px;padding:12px 14px;margin-bottom:16px">
+        <span style="font-size:22px;flex-shrink:0">⚖️</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent)">PESOS ENCONTRADOS EN ESTE DISPOSITIVO</div>
+          <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-top:2px">${legacy.map(w=>w.kg.toFixed(1)+' kg ('+fmtDate(w.date)+')').join(' · ')}</div>
+        </div>
+        <button onclick="restoreLegacyWeights()" style="background:var(--accent);border:none;color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:8px 12px;cursor:pointer;border-radius:2px;flex-shrink:0">RECUPERAR</button>
+      </div>`;
+    } else {
+      legEl.innerHTML = '';
     }
   }
   const dStr = todayStr();
