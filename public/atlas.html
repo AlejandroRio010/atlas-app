@@ -267,7 +267,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="stats-grid">
 <div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">Peso actual</div><div class="stat-value" id="stat-weight">—<span class="stat-unit">kg</span></div><div class="stat-trend" id="stat-weight-trend">Sin datos</div></div>
 <div class="stat-card"><div class="stat-label">Sesiones gym</div><div class="stat-value" id="stat-sessions">0<span class="stat-unit">/3</span></div><div class="stat-trend">Esta semana</div></div>
-<div class="stat-card"><div class="stat-label">Vol. semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Total levantado</div></div>
+<div class="stat-card"><div class="stat-label">Kilos semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Sesiones terminadas · reset lunes</div></div>
 <div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">% objetivo</div><div class="stat-value" id="stat-goal">—<span class="stat-unit">%</span></div><div class="stat-trend" id="stat-goal-trend">Define tu objetivo</div></div>
 </div>
 <div class="section-label">Plan de la semana</div>
@@ -276,17 +276,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="quote"><div class="quote-text" id="quote-text">"La consistencia gana sobre la intensidad."</div><div class="quote-author">Atlas · <span id="quote-day">día 1</span></div></div>
 </div>
 
-<div class="panel" id="panel-planner">
-<div class="section-label">Calendario semanal</div>
-<div class="planner-card">
-<div class="planner-header"><div><div class="planner-title" id="planner-month">—</div><div class="planner-week" id="planner-week-range">—</div></div><div class="planner-nav"><button onclick="changeWeek(-1)">‹</button><button onclick="changeWeek(0)">●</button><button onclick="changeWeek(1)">›</button></div></div>
-<div id="planner-rows"></div>
-</div>
-<div class="card"><div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);line-height:1.6"><p><span style="color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:.1em">CÓMO USAR ·</span> Cada día puede tener hasta 2 sesiones (ej: martes mañana gym, tarde fútbol). Pulsa "+ AÑADIR SESIÓN" para meter la segunda.</p></div></div>
-</div>
-
 <div class="panel" id="panel-workout">
 <div class="section-label">Entrenamiento <span id="workout-day-label" style="color:var(--accent);margin-left:4px"></span></div>
+<div class="planner-header" style="margin-bottom:10px"><div><div class="planner-title" id="workout-week-title">ESTA SEMANA</div><div class="planner-week" id="workout-week-range">—</div></div><div class="planner-nav"><button onclick="changeWorkoutWeek(-1)">‹</button><button onclick="changeWorkoutWeek(0)">●</button><button onclick="changeWorkoutWeek(1)">›</button></div></div>
 <div class="day-selector" id="day-selector"></div>
 <div id="session-tabs-container"></div>
 <div id="workout-content"></div>
@@ -425,7 +417,6 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 
 <nav class="tabs"><div class="tabs-inner">
 <button class="tab active" data-panel="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Inicio</button>
-<button class="tab" data-panel="planner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Plan</button>
 <button class="tab" data-panel="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6.5 6.5h11v11h-11z"/><path d="M2 9.5v5M22 9.5v5M6.5 12H4M20 12h-2.5"/></svg>Gym</button>
 <button class="tab" data-panel="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/></svg>Comida</button>
 <button class="tab" data-panel="rutina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/></svg>Rutina</button>
@@ -490,6 +481,10 @@ const ROUTINES = {
 };
 
 const DEFAULT_PLAN = { 1: ['empuje'], 2: ['cardio'], 3: ['tiron'], 4: ['pierna'], 5: ['hombro'], 6: ['cardio'], 0: ['descanso'] };
+
+// Variantes de equipamiento seleccionables en cualquier ejercicio
+// (ej: press banca → barra libre / máquina Smith / mancuernas)
+const EQUIP_VARIANTS = ['Barra libre','Máquina Smith','Mancuernas','Máquina','Polea','Peso corporal'];
 
 const SUPPLEMENTS = [
   { id: "creatina", name: "Creatina", detail: "1 cazo pequeño · da igual la hora", icon: "C" },
@@ -766,6 +761,8 @@ let state = {
   selectedDayOffset: 0,
   selectedSessionIndex: 0,
   plannerWeekOffset: 0,
+  workoutWeekOffset: 0,
+  variantPrefs: {},
   stretchView: 'post',
   recipeFilter: 'all',
   customRecipes: [],
@@ -806,6 +803,7 @@ function loadState(){
       state = { ...state, ...data.state };
       migrateState();
       state.selectedDayOffset = (new Date().getDay()===0 ? 6 : new Date().getDay()-1);
+      state.workoutWeekOffset = 0;
       try { localStorage.setItem(_CACHE_KEY, JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
       lmbGateInit();
@@ -981,26 +979,15 @@ function renderDashboard(){
     if (goalTrend) goalTrend.textContent = state.goalWeight ? ('Hacia ' + state.goalWeight.toFixed(1) + ' kg') : 'Define tu objetivo';
   }
 
+  // Solo cuentan las sesiones donde se pulsó "Terminar sesión" — se resetea cada lunes
   const monday = getCurrentMonday();
-  const weekStart = dateToStr(monday);
   let totalVol=0, gymSessions=0;
   for (let i=0; i<7; i++){
     const d = new Date(monday); d.setDate(monday.getDate()+i);
-    const dStr = dateToStr(d);
-    if (dStr > todayStr()) continue;
-    if (!state.workouts[dStr]) continue;
-    // Only count IDs that belong to this day's assigned routine
-    const rKeys = getRoutineKeysForDate(dStr);
-    const validIds = new Set();
-    rKeys.forEach(rk=>getEffectiveExercises(rk).forEach(ex=>validIds.add(ex.id)));
-    if (!validIds.size) continue;
-    let dayVol=0, has=false;
-    Object.entries(state.workouts[dStr]).forEach(([exId,e])=>{
-      if (!validIds.has(exId)) return;
-      (e.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps){ dayVol+=s.kg*s.reps; has=true; } });
+    const slots = state.sessionData[dateToStr(d)] || {};
+    Object.values(slots).forEach(sd=>{
+      if (sd && sd.finished){ totalVol += (sd.totalKg||0); gymSessions++; }
     });
-    totalVol += dayVol;
-    if (has) gymSessions++;
   }
   const volDisplay = totalVol >= 1000
     ? `${(totalVol/1000).toFixed(1)}<span class="stat-unit">tn</span>`
@@ -1040,6 +1027,7 @@ function renderWeekGridDashboard(){
 }
 
 function renderPlanner(){
+  if (!document.getElementById('planner-rows')) return; // pestaña Plan eliminada — el Gym cubre esta función
   const baseMonday = getCurrentMonday();
   const monday = new Date(baseMonday); monday.setDate(monday.getDate() + state.plannerWeekOffset*7);
   const sunday = new Date(monday); sunday.setDate(sunday.getDate()+6);
@@ -1156,10 +1144,35 @@ function changeWeek(dir){
   renderPlanner();
 }
 
+function getWorkoutMonday(){
+  const m = getCurrentMonday();
+  m.setDate(m.getDate() + (state.workoutWeekOffset||0)*7);
+  return m;
+}
+function changeWorkoutWeek(delta){
+  if (delta === 0){
+    state.workoutWeekOffset = 0;
+    state.selectedDayOffset = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
+  } else {
+    state.workoutWeekOffset = (state.workoutWeekOffset||0) + delta;
+  }
+  state.selectedSessionIndex = 0;
+  renderWorkout();
+}
+
 function renderWorkout(){
-  const monday = getCurrentMonday();
+  const monday = getWorkoutMonday();
   const todayStrVal = todayStr();
   const dayNames=['L','M','X','J','V','S','D'];
+
+  const off = state.workoutWeekOffset||0;
+  const wkTitle = document.getElementById('workout-week-title');
+  if (wkTitle){
+    const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const sunday = new Date(monday); sunday.setDate(sunday.getDate()+6);
+    wkTitle.textContent = off===0 ? 'ESTA SEMANA' : off===-1 ? 'SEMANA PASADA' : off===1 ? 'PRÓXIMA SEMANA' : `${months[monday.getMonth()].toUpperCase()} ${monday.getFullYear()}`;
+    document.getElementById('workout-week-range').textContent = `${monday.getDate()} ${months[monday.getMonth()]} – ${sunday.getDate()} ${months[sunday.getMonth()]}`;
+  }
   let sel='';
   for (let i=0;i<7;i++){
     const d=new Date(monday); d.setDate(monday.getDate()+i);
@@ -1269,6 +1282,7 @@ function renderWorkout(){
       const v = saved.sets.filter(s=>s&&s.kg);
       if (v.length){ extra = ` · <span style="color:var(--accent)">${Math.max(...v.map(s=>s.kg))}kg</span>`; }
     }
+    if (saved && saved.variant){ extra += ` · <span style="color:var(--ink-faint)">${saved.variant}</span>`; }
     html += `<div class="exercise-item ${done?'done':''}" onclick="openExerciseModal('${ex.id}','${selStr}')">
       <div style="flex:1;min-width:0">
         <div class="exercise-name">${ex.name}</div>
@@ -1359,14 +1373,16 @@ function saveSession(dStr, slotIdx, typeOrBool){
 
 function selectWorkoutDay(o){ state.selectedDayOffset = o; state.selectedSessionIndex = 0; renderWorkout(); }
 function goToWorkoutDate(dStr){
-  const monday = getCurrentMonday();
+  const curMonday = getCurrentMonday();
   const target = strToDate(dStr);
-  const off = Math.round((target - monday) / 86400000);
-  state.selectedDayOffset = Math.max(0, Math.min(6, off));
+  const targetMonday = getMondayOf(target);
+  state.workoutWeekOffset = Math.round((targetMonday - curMonday) / (7*86400000));
+  state.selectedDayOffset = Math.max(0, Math.min(6, Math.round((target - targetMonday) / 86400000)));
   state.selectedSessionIndex = 0;
   goToTab('workout');
 }
 function goToWorkout(){
+  state.workoutWeekOffset = 0;
   state.selectedDayOffset = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
   state.selectedSessionIndex = 0;
   goToTab('workout');
@@ -1432,19 +1448,15 @@ function openExerciseModal(exId, dStr){
       <input type="number" placeholder="reps" value="${s.reps||''}" data-set="${i}" data-field="reps">
     </div>`;
   }
-  let lastHtml='';
-  const past = Object.keys(state.workouts).sort().reverse();
-  for (const d of past){
-    if (d===dStr) continue;
-    if (state.workouts[d][exId] && state.workouts[d][exId].sets && state.workouts[d][exId].sets.length){
-      const txt = state.workouts[d][exId].sets.filter(s=>s&&s.kg&&s.reps).map(s=>`${s.kg}×${s.reps}`).join(' · ');
-      if (txt){ lastHtml = `<div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.1em;margin-bottom:14px;padding:10px;background:var(--bg-elev-2);border-radius:2px">ÚLTIMA · ${fmtDate(d)} · ${txt}</div>`; break; }
-    }
-  }
+  const preVariant = saved.variant || (state.variantPrefs && state.variantPrefs[exId]) || null;
+  const lastTxt = _lastLineHtml(exId, dStr, preVariant);
+  const chips = EQUIP_VARIANTS.map(v=>`<div class="pill ${v===preVariant?'active':''}" data-variant="${v}" onclick="selectVariantChip(this,'${exId}','${dStr}')" style="white-space:nowrap;cursor:pointer">${v}</div>`).join('');
   document.getElementById('modal-content').innerHTML = `
     <div class="modal-title">${ex.name.toUpperCase()}</div>
     <div class="modal-sub">${ex.sets} × ${ex.reps}${ex.note?' · '+ex.note:''}</div>
-    ${lastHtml}
+    <div id="variant-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${chips}</div>
+    <a href="https://www.youtube.com/results?search_query=${encodeURIComponent('técnica '+ex.name+' gym')}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);color:var(--ink-dim);font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:10px;margin-bottom:12px;text-decoration:none;border-radius:2px">▶ VER TÉCNICA EN VÍDEO</a>
+    <div id="last-line" style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);letter-spacing:.1em;margin-bottom:14px;padding:10px;background:var(--bg-elev-2);border-radius:2px;${lastTxt?'':'display:none'}">${lastTxt}</div>
     <div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:10px;margin-bottom:8px">
       <div></div><div class="input-label" style="margin:0">KG / SEG</div><div class="input-label" style="margin:0">REPS</div>
     </div>
@@ -1456,6 +1468,38 @@ function openExerciseModal(exId, dStr){
     </div>
   `;
   document.getElementById('modal-bg').classList.add('active');
+}
+
+// Última sesión registrada de un ejercicio — prioriza la misma variante si hay una elegida
+function _lastLineHtml(exId, dStr, variant){
+  const past = Object.keys(state.workouts).sort().reverse();
+  let lastAny=null, lastVar=null;
+  for (const d of past){
+    if (d===dStr) continue;
+    const w = state.workouts[d] && state.workouts[d][exId];
+    if (!w || !w.sets || !w.sets.length) continue;
+    const txt = w.sets.filter(s=>s&&s.kg&&s.reps).map(s=>`${s.kg}×${s.reps}`).join(' · ');
+    if (!txt) continue;
+    if (!lastAny) lastAny = { d, txt, variant: w.variant };
+    if (variant && w.variant === variant){ lastVar = { d, txt, variant: w.variant }; break; }
+    if (!variant) break;
+  }
+  const pick = lastVar || lastAny;
+  if (!pick) return '';
+  return `ÚLTIMA · ${fmtDate(pick.d)}${pick.variant?' · '+pick.variant:''} · ${pick.txt}`;
+}
+
+function selectVariantChip(el, exId, dStr){
+  const was = el.classList.contains('active');
+  el.parentElement.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  if (!was) el.classList.add('active');
+  const v = was ? null : el.dataset.variant;
+  const ll = document.getElementById('last-line');
+  if (ll){
+    const h = _lastLineHtml(exId, dStr, v);
+    ll.innerHTML = h;
+    ll.style.display = h ? '' : 'none';
+  }
 }
 
 function saveExercise(exId, dStr){
@@ -1470,6 +1514,14 @@ function saveExercise(exId, dStr){
     if (inp.value) sets[i][f] = parseFloat(inp.value);
   });
   state.workouts[dStr][exId].sets = sets;
+  const chip = document.querySelector('#variant-chips .pill.active');
+  if (chip){
+    state.workouts[dStr][exId].variant = chip.dataset.variant;
+    if (!state.variantPrefs) state.variantPrefs = {};
+    state.variantPrefs[exId] = chip.dataset.variant;
+  } else {
+    delete state.workouts[dStr][exId].variant;
+  }
   if (sets.some(s=>s&&s.kg&&s.reps)) state.completedExercises[dStr+'-'+exId] = true;
   saveState();
   closeModal();
@@ -1494,7 +1546,7 @@ function renderSavedGymData(dStr){
     const ex = findExById(id);
     const name = ex ? ex.name : id;
     const maxKg = Math.max(...sets.map(s=>s.kg));
-    const setsStr = sets.map(s=>`${s.kg}kg×${s.reps}`).join(' · ');
+    const setsStr = sets.map(s=>`${s.kg}kg×${s.reps}`).join(' · ') + (e.variant ? ` · ${e.variant}` : '');
     return { name, maxKg, setsStr, id, dStr };
   }).filter(Boolean);
   if (!entries.length) return '';
@@ -1525,8 +1577,12 @@ function addSetRow(){
 function closeModal(){ const mb=document.getElementById('modal-bg'); mb.classList.remove('active'); mb.classList.remove('wizard-mode'); }
 
 function finishGymSession(dStr, slotIdx){
+  // Suma solo los ejercicios de la rutina de ESTE slot (por si hay 2 sesiones el mismo día)
+  const rk = getRoutineKeysForDate(dStr)[slotIdx];
+  const validIds = rk ? new Set(getEffectiveExercises(rk).map(e=>e.id)) : null;
   let totalKg = 0;
-  Object.values(state.workouts[dStr]||{}).forEach(ex=>{
+  Object.entries(state.workouts[dStr]||{}).forEach(([exId,ex])=>{
+    if (validIds && validIds.size && !validIds.has(exId)) return;
     (ex.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps) totalKg += s.kg * s.reps; });
   });
   totalKg = Math.round(totalKg);
@@ -1542,13 +1598,12 @@ function finishGymSession(dStr, slotIdx){
 
 function showDoneOverlay(totalKg){
   const monday = getCurrentMonday();
-  const weekStart = dateToStr(monday);
   let weekKg = 0;
-  Object.entries(state.workouts).forEach(([d,ex])=>{
-    if (d >= weekStart) Object.values(ex).forEach(e=>{
-      (e.sets||[]).forEach(s=>{ if(s&&s.kg&&s.reps) weekKg += s.kg*s.reps; });
-    });
-  });
+  for (let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const slots = state.sessionData[dateToStr(d)] || {};
+    Object.values(slots).forEach(sd=>{ if(sd && sd.finished) weekKg += (sd.totalKg||0); });
+  }
   weekKg = Math.round(weekKg);
   const msg = totalKg > 8000 ? '¡Sesión brutal!' : totalKg > 5000 ? '¡Muy buena sesión!' : totalKg > 2000 ? '¡Buen trabajo!' : totalKg > 0 ? '¡Sesión completada!' : 'Sesión registrada';
   document.getElementById('done-msg').textContent = msg;
@@ -2173,7 +2228,7 @@ function renderRutina(){
           <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim)">${r.descripcion||''}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center">
-          ${r.isCustom?`<button onclick="editarRutinaCustom('${r.id}')" style="background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;padding:5px 8px;cursor:pointer">EDITAR</button>`:''}
+          <button onclick="${r.isCustom?`editarRutinaCustom('${r.id}')`:`editarRutinaPredefinida('${r.id}')`}" style="background:none;border:1px solid var(--line);color:var(--ink-faint);font-family:var(--mono);font-size:9px;padding:5px 8px;cursor:pointer">EDITAR</button>
           <button onclick="activarRutina('${r.id}')" style="background:${r.id===active?r.color:'none'};border:1px solid ${r.id===active?r.color:'var(--line)'};color:${r.id===active?'#fff':'var(--ink-faint)'};font-family:var(--mono);font-size:9px;padding:6px 10px;cursor:pointer;white-space:nowrap">${r.id===active?'ACTIVA':'ACTIVAR'}</button>
         </div>
       </div>
@@ -2283,6 +2338,23 @@ let _rw = null;
 function abrirCreadorRutina(){
   _rw = { nombre:'', dias:[], curDia:0, showLib:false, libCat:null, pendingEx:null, editingId:null };
   _rwStep1();
+}
+function editarRutinaPredefinida(id){
+  // Las plantillas de serie no se pueden modificar in situ: se abre el editor
+  // con una copia rellenada y al guardar se crea como rutina personalizada
+  const t = RUTINA_TEMPLATES.find(r=>r.id===id);
+  if (!t) return;
+  const dias = [];
+  DIAS_KEYS.forEach(dk=>{
+    const keys = (t.plan[dk]||[]).filter(k=>k && k!=='descanso');
+    if (!keys.length) return;
+    const dow = Object.entries(_DOW_TO_DK).find(([,v])=>v===dk)?.[0]||'1';
+    const ejercicios = [];
+    keys.forEach(k=>getEffectiveExercises(k).forEach(e=>ejercicios.push({ nombre:e.name, series:String(e.sets||3), reps:String(e.reps||'10') })));
+    if (ejercicios.length) dias.push({ dow, ejercicios });
+  });
+  _rw = { nombre: t.nombre + ' (editada)', dias: dias.length?dias:[{dow:'',ejercicios:[]}], curDia:0, showLib:false, libCat:null, pendingEx:null, editingId:null };
+  _rwStep2();
 }
 function editarRutinaCustom(id){
   const r = (state.customRoutines||[]).find(x=>x.id===id);
@@ -2833,6 +2905,7 @@ document.querySelectorAll('.pill[data-prog]').forEach(p=>p.addEventListener('cli
 loadState();
 state.selectedDayOffset = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
 state.selectedSessionIndex = 0;
+state.workoutWeekOffset = 0;
 renderHeader();
 renderDashboard();
 // Service worker disabled in multi-user mode
