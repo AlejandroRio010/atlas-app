@@ -267,7 +267,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">Peso actual</div><div class="stat-value" id="stat-weight">—<span class="stat-unit">kg</span></div><div class="stat-trend" id="stat-weight-trend">Sin datos</div></div>
 <div class="stat-card"><div class="stat-label">Sesiones gym</div><div class="stat-value" id="stat-sessions">0<span class="stat-unit">/3</span></div><div class="stat-trend">Esta semana</div></div>
 <div class="stat-card"><div class="stat-label">Vol. semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Total levantado</div></div>
-<div class="stat-card"><div class="stat-label">% objetivo</div><div class="stat-value" id="stat-goal">—<span class="stat-unit">%</span></div><div class="stat-trend">Hacia 78.3 kg</div></div>
+<div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">% objetivo</div><div class="stat-value" id="stat-goal">—<span class="stat-unit">%</span></div><div class="stat-trend" id="stat-goal-trend">Define tu objetivo</div></div>
 </div>
 <div class="section-label">Plan de la semana</div>
 <div class="week-grid" id="week-grid-dashboard"></div>
@@ -385,23 +385,13 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="section-label">Métricas personales</div>
 <div class="card">
 <div class="modal-title">PESO</div>
-<div class="modal-sub">Registro · objetivo 78.3 kg</div>
+<div class="modal-sub" id="weight-goal-sub">Registro de peso</div>
 <div class="input-row"><input type="number" step="0.1" id="weight-input" placeholder="Peso en kg (ej. 78.5)"><button onclick="saveWeight()">Guardar</button></div>
+<div class="input-row" style="margin-top:8px"><input type="number" step="0.1" id="goal-input" placeholder="Objetivo en kg (ej. 78.3)"><button onclick="saveGoalWeight()">Fijar</button></div>
 <div id="weight-chart" style="margin:14px 0 4px"></div>
 <div id="weight-history" style="margin-top:4px"></div>
 </div>
-<div class="card" style="margin-top:16px">
-<div class="modal-title">REFERENCIA</div>
-<div class="modal-sub">InBody · 11 marzo 2026</div>
-<div style="font-family:var(--mono);font-size:12px;color:var(--ink-dim);line-height:2">
-<div style="display:flex;justify-content:space-between"><span>PESO</span><span style="color:var(--ink)">78.8 kg</span></div>
-<div style="display:flex;justify-content:space-between"><span>MASA MUSCULAR</span><span style="color:var(--ink)">38.3 kg</span></div>
-<div style="display:flex;justify-content:space-between"><span>GRASA</span><span style="color:var(--ink)">12.2 kg · 15.5%</span></div>
-<div style="display:flex;justify-content:space-between"><span>IMC</span><span style="color:var(--ink)">24.1</span></div>
-<div style="display:flex;justify-content:space-between"><span>METAB. BASAL</span><span style="color:var(--ink)">1808 kcal</span></div>
-<div style="display:flex;justify-content:space-between"><span>OBJETIVO</span><span style="color:var(--accent)">78.3 kg</span></div>
-</div>
-</div>
+<div class="card" style="margin-top:16px" id="inbody-card"></div>
 <div class="card" style="margin-top:16px">
 <div class="modal-title">DATOS</div>
 <div class="modal-sub">Copia de seguridad · Restaurar</div>
@@ -765,6 +755,8 @@ const LUMBAR_PROGRAM = {
 
 let state = {
   weights: [],
+  goalWeight: null,
+  inbodyRef: null,
   workouts: {},
   completedExercises: {},
   completedStretches: {},
@@ -799,7 +791,7 @@ function migrateState(){
   if(!state.lumbar) state.lumbar={startDate:null,baseline:null,changes:[],logs:{}};
 }
 // Per-user localStorage key — prevents cross-user cache bleed
-const _CACHE_KEY = 'atlas-v3-' + (window.__atlasUserId || 'anon');
+const _CACHE_KEY = 'atlas-v4-' + (window.__atlasUserId || 'anon');
 
 function loadState(){
   // Try local cache first for instant load, then sync from server
@@ -935,10 +927,15 @@ function renderDashboard(){
     t.textContent = (diff>=0?'+':'') + diff.toFixed(1) + ' kg vs anterior';
     t.className = 'stat-trend ' + (diff<0?'down':diff>0?'up':'');
   }
-  if (last){
-    const start=80.5, target=78.3;
+  const goalTrend = document.getElementById('stat-goal-trend');
+  if (last && state.goalWeight && weights[0].kg !== state.goalWeight){
+    const start = weights[0].kg, target = state.goalWeight;
     const pct = Math.max(0, Math.min(100, Math.round(((start - last.kg)/(start - target))*100)));
     document.getElementById('stat-goal').innerHTML = `${pct}<span class="stat-unit">%</span>`;
+    if (goalTrend) goalTrend.textContent = 'Hacia ' + target.toFixed(1) + ' kg';
+  } else {
+    document.getElementById('stat-goal').innerHTML = `—<span class="stat-unit">%</span>`;
+    if (goalTrend) goalTrend.textContent = state.goalWeight ? ('Hacia ' + state.goalWeight.toFixed(1) + ' kg') : 'Define tu objetivo';
   }
 
   const monday = getCurrentMonday();
@@ -2725,7 +2722,40 @@ function saveWeight(){
   renderDashboard();
 }
 
+function saveGoalWeight(){
+  const inp = document.getElementById('goal-input');
+  const v = parseFloat(inp.value);
+  if (!v || v<30 || v>200){ showToast('Objetivo no válido'); return; }
+  state.goalWeight = v;
+  saveState();
+  inp.value='';
+  showToast('Objetivo guardado');
+  renderMetrics();
+  renderDashboard();
+}
+
+function renderInbodyCard(){
+  const c = document.getElementById('inbody-card');
+  if (!c) return;
+  const ref = state.inbodyRef;
+  const goalRow = state.goalWeight ? `<div style="display:flex;justify-content:space-between"><span>OBJETIVO</span><span style="color:var(--accent)">${state.goalWeight.toFixed(1)} kg</span></div>` : '';
+  if (!ref){
+    c.innerHTML = `<div class="modal-title">REFERENCIA</div><div class="modal-sub">InBody · báscula avanzada</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--ink-dim);line-height:2">${goalRow}</div>
+    ${goalRow?'':'<div class="empty" style="padding:10px 0">Sin datos de referencia aún</div>'}`;
+    return;
+  }
+  const rows = [['PESO',ref.peso],['MASA MUSCULAR',ref.musculo],['GRASA',ref.grasa],['IMC',ref.imc],['METAB. BASAL',ref.metab]]
+    .filter(r=>r[1])
+    .map(r=>`<div style="display:flex;justify-content:space-between"><span>${r[0]}</span><span style="color:var(--ink)">${r[1]}</span></div>`).join('');
+  c.innerHTML = `<div class="modal-title">REFERENCIA</div><div class="modal-sub">${ref.fuente||'InBody'} · ${ref.fecha||''}</div>
+  <div style="font-family:var(--mono);font-size:12px;color:var(--ink-dim);line-height:2">${rows}${goalRow}</div>`;
+}
+
 function renderMetrics(){
+  const sub = document.getElementById('weight-goal-sub');
+  if (sub) sub.textContent = state.goalWeight ? ('Registro · objetivo ' + state.goalWeight.toFixed(1) + ' kg') : 'Registro · fija tu objetivo abajo';
+  renderInbodyCard();
   const h = document.getElementById('weight-history');
   const ws = state.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
   renderWeightChart();
@@ -2758,11 +2788,6 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click', ()=>goT
 document.querySelectorAll('.pill[data-prog]').forEach(p=>p.addEventListener('click', ()=>{ progressView = p.dataset.prog; renderProgress(); }));
 
 loadState();
-if (state.weights.length===0){
-  state.weights.push({ date:'2026-01-19', kg: 80.5 });
-  state.weights.push({ date:'2026-03-11', kg: 78.8 });
-  saveState();
-}
 state.selectedDayOffset = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
 state.selectedSessionIndex = 0;
 renderHeader();
@@ -3246,16 +3271,16 @@ function renderWeightChart(){
     return;
   }
   const W=340, H=110, PL=40, PR=54, PT=12, PB=8;
-  const TARGET = 78.3;
-  const allKg = sorted.map(w=>w.kg);
-  const minKg = Math.min(...allKg, TARGET) - 0.8;
-  const maxKg = Math.max(...allKg, TARGET) + 0.8;
+  const TARGET = state.goalWeight || null;
+  const allKg = sorted.map(w=>w.kg).concat(TARGET ? [TARGET] : []);
+  const minKg = Math.min(...allKg) - 0.8;
+  const maxKg = Math.max(...allKg) + 0.8;
   const xRange = W - PL - PR, yRange = H - PT - PB;
   const dates = sorted.map(w=>new Date(w.date+'T00:00:00').getTime());
   const dMin = dates[0], dRange = (dates[dates.length-1] - dMin) || 1;
   const toX = t => PL + ((t - dMin) / dRange) * xRange;
   const toY = kg => PT + (1 - (kg - minKg) / (maxKg - minKg)) * yRange;
-  const ty = toY(TARGET);
+  const ty = TARGET ? toY(TARGET) : null;
   const pts = sorted.map(w=>[toX(new Date(w.date+'T00:00:00').getTime()), toY(w.kg)]);
   const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
   const areaPath = path + ` L${pts[pts.length-1][0].toFixed(1)},${(H-PB).toFixed(1)} L${pts[0][0].toFixed(1)},${(H-PB).toFixed(1)} Z`;
@@ -3265,17 +3290,19 @@ function renderWeightChart(){
   }).join('');
   const last = sorted[sorted.length-1];
   const [lx,ly] = pts[pts.length-1];
-  const yLabels = [minKg+0.4, TARGET, maxKg-0.4].map(kg=>{
-    const y=toY(kg), isT=Math.abs(kg-TARGET)<0.2;
+  const yLabelKgs = TARGET ? [minKg+0.4, TARGET, maxKg-0.4] : [minKg+0.4, maxKg-0.4];
+  const yLabels = yLabelKgs.map(kg=>{
+    const y=toY(kg), isT=TARGET && Math.abs(kg-TARGET)<0.2;
     return `<text x="${PL-5}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="${isT?'#7fb069':'#555049'}">${kg.toFixed(1)}</text>`;
   }).join('');
+  const targetSvg = TARGET ? `<rect x="${PL}" y="${ty.toFixed(1)}" width="${xRange}" height="${Math.max(0,H-PB-ty).toFixed(1)}" fill="rgba(127,176,105,0.07)"/>
+    <line x1="${PL}" y1="${ty.toFixed(1)}" x2="${(PL+xRange).toFixed(1)}" y2="${ty.toFixed(1)}" stroke="#7fb069" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
+    <text x="${(PL+xRange+4).toFixed(1)}" y="${(ty+3).toFixed(1)}" font-size="9" fill="#7fb069">${TARGET.toFixed(1)}</text>
+    <text x="${(PL+xRange+4).toFixed(1)}" y="${(ty+12).toFixed(1)}" font-size="8" fill="#7fb069" opacity="0.7">obj</text>` : '';
   cont.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible;font-family:ui-monospace,monospace">
     <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff4d1f" stop-opacity="0.18"/><stop offset="100%" stop-color="#ff4d1f" stop-opacity="0"/></linearGradient></defs>
     <line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#2a2a2a" stroke-width="1"/>
-    <rect x="${PL}" y="${ty.toFixed(1)}" width="${xRange}" height="${Math.max(0,H-PB-ty).toFixed(1)}" fill="rgba(127,176,105,0.07)"/>
-    <line x1="${PL}" y1="${ty.toFixed(1)}" x2="${(PL+xRange).toFixed(1)}" y2="${ty.toFixed(1)}" stroke="#7fb069" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>
-    <text x="${(PL+xRange+4).toFixed(1)}" y="${(ty+3).toFixed(1)}" font-size="9" fill="#7fb069">78.3</text>
-    <text x="${(PL+xRange+4).toFixed(1)}" y="${(ty+12).toFixed(1)}" font-size="8" fill="#7fb069" opacity="0.7">obj</text>
+    ${targetSvg}
     <path d="${areaPath}" fill="url(#wg)"/>
     <path d="${path}" fill="none" stroke="#ff4d1f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
