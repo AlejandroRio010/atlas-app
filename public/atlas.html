@@ -267,7 +267,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="stats-grid">
 <div class="stat-card" onclick="goToTab('metrics')" style="cursor:pointer"><div class="stat-label">Peso actual</div><div class="stat-value" id="stat-weight">—<span class="stat-unit">kg</span></div><div class="stat-trend" id="stat-weight-trend">Sin datos</div></div>
 <div class="stat-card"><div class="stat-label">Sesiones gym</div><div class="stat-value" id="stat-sessions">0<span class="stat-unit">/3</span></div><div class="stat-trend">Esta semana</div></div>
-<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">Kilos semana</div><div class="stat-value" id="stat-volume">—<span class="stat-unit">kg</span></div><div class="stat-trend">Sesiones terminadas · reset lunes</div></div>
+<div class="stat-card" style="grid-column:1/-1;cursor:pointer" onclick="goToPRs()"><div class="stat-label">Récords personales · PR</div><div id="pr-dash" style="margin-top:8px"></div></div>
 </div>
 <div id="today-meals"></div>
 <div class="section-label">Plan de la semana</div>
@@ -369,6 +369,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="section-label">Progreso</div>
 <div class="pill-row">
 <div class="pill active" data-prog="sessions">Sesiones</div>
+<div class="pill" data-prog="prs">PRs 🏆</div>
 <div class="pill" data-prog="exercises">Ejercicios</div>
 <div class="pill" data-prog="cardio_all">Cardio</div>
 </div>
@@ -774,6 +775,7 @@ let state = {
   nutrition: {},
   nutritionFavs: [],
   mealPlan: {},
+  prPins: [],
   lumbar: { startDate: null, baseline: null, changes: [], logs: {} },
 };
 let progressView = 'sessions';
@@ -957,21 +959,31 @@ function renderDashboard(){
     t.textContent = (diff>=0?'+':'') + diff.toFixed(1) + ' kg vs anterior';
     t.className = 'stat-trend ' + (diff<0?'down':diff>0?'up':'');
   }
-  // Solo cuentan las sesiones donde se pulsó "Terminar sesión" — se resetea cada lunes
+  // Sesiones gym: solo cuentan las terminadas con "Terminar sesión" — reset cada lunes
   const monday = getCurrentMonday();
-  let totalVol=0, gymSessions=0;
+  let gymSessions=0;
   for (let i=0; i<7; i++){
     const d = new Date(monday); d.setDate(monday.getDate()+i);
     const slots = state.sessionData[dateToStr(d)] || {};
-    Object.values(slots).forEach(sd=>{
-      if (sd && sd.finished){ totalVol += (sd.totalKg||0); gymSessions++; }
-    });
+    Object.values(slots).forEach(sd=>{ if (sd && sd.finished) gymSessions++; });
   }
-  const volDisplay = totalVol >= 1000
-    ? `${(totalVol/1000).toFixed(1)}<span class="stat-unit">tn</span>`
-    : `${Math.round(totalVol)}<span class="stat-unit">kg</span>`;
-  document.getElementById('stat-volume').innerHTML = volDisplay;
   document.getElementById('stat-sessions').innerHTML = `${gymSessions}<span class="stat-unit">/3</span>`;
+
+  // Récords personales: los fijados con ⭐ o, si no hay, los 3 más recientes
+  const prEl = document.getElementById('pr-dash');
+  if (prEl){
+    const prs = computeAllPRs();
+    const pinned = (state.prPins||[]).filter(id=>prs[id]).map(id=>({ id, name:findExNameById(id), ...prs[id] }));
+    const show = pinned.length ? pinned.slice(0,4)
+      : Object.entries(prs).map(([id,pr])=>({ id, name:findExNameById(id), ...pr }))
+          .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+    prEl.innerHTML = show.length
+      ? show.map(e=>`<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3px 0">
+          <span style="font-family:var(--serif);font-size:12px;color:var(--ink-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1">${e.name}</span>
+          <span style="font-family:var(--mono);font-size:13px;color:var(--accent);flex-shrink:0">${e.kg}kg</span>
+        </div>`).join('') + (pinned.length ? '' : `<div class="stat-trend" style="margin-top:6px">⭐ Fija tus favoritos en Progreso → PRs</div>`)
+      : `<div class="stat-trend">Apunta pesos en el gym y tus récords saldrán aquí</div>`;
+  }
 
   renderTodayMeals();
   renderWeekGridDashboard();
@@ -1502,9 +1514,18 @@ function saveExercise(exId, dStr){
     delete state.workouts[dStr][exId].variant;
   }
   if (sets.some(s=>s&&s.kg&&s.reps)) state.completedExercises[dStr+'-'+exId] = true;
+  // ¿Nuevo PR? Mejor kg de hoy vs récord histórico en otros días
+  let histMax = 0;
+  Object.entries(state.workouts).forEach(([d, day])=>{
+    if (d===dStr) return;
+    const e2 = day[exId]; if (!e2) return;
+    (e2.sets||[]).forEach(s=>{ if (s && s.kg && s.kg > histMax) histMax = s.kg; });
+  });
+  const todayMax = Math.max(0, ...sets.filter(s=>s&&s.kg).map(s=>s.kg));
+  const isPR = todayMax > 0 && histMax > 0 && todayMax > histMax;
   saveState();
   closeModal();
-  showToast('Guardado');
+  showToast(isPR ? `🏆 ¡NUEVO PR! ${todayMax} kg` : 'Guardado');
   renderWorkout();
   renderDashboard();
 }
@@ -1514,6 +1535,74 @@ function findExById(id){
     if (found) return found;
   }
   return null;
+}
+
+function findExNameById(id){
+  const ex = findExById(id);
+  if (ex) return ex.name;
+  if (state.routineExercises){
+    for (const k of Object.keys(state.routineExercises)){
+      const f = (state.routineExercises[k]||[]).find(e=>e&&e.id===id);
+      if (f) return f.name;
+    }
+  }
+  return id;
+}
+
+// Récord personal por ejercicio: mayor kg registrado (a igual kg, más reps).
+// Se calcula al vuelo desde los entrenos guardados — siempre al día.
+function computeAllPRs(){
+  const prs = {};
+  Object.entries(state.workouts).forEach(([d, day])=>{
+    Object.entries(day).forEach(([exId, e])=>{
+      (e.sets||[]).forEach(s=>{
+        if (!s || !s.kg || s.kg<=0) return;
+        const cur = prs[exId];
+        if (!cur || s.kg > cur.kg || (s.kg === cur.kg && (s.reps||0) > cur.reps)){
+          prs[exId] = { kg: s.kg, reps: s.reps||0, date: d };
+        }
+      });
+    });
+  });
+  return prs;
+}
+
+function togglePrPin(id){
+  if (!state.prPins) state.prPins = [];
+  const i = state.prPins.indexOf(id);
+  if (i>=0) state.prPins.splice(i,1); else state.prPins.push(id);
+  saveState();
+  renderProgress();
+  renderDashboard();
+}
+
+function goToPRs(){
+  progressView = 'prs';
+  goToTab('progress');
+}
+
+function renderProgressPRs(cont){
+  const prs = computeAllPRs();
+  const pins = state.prPins || [];
+  const entries = Object.entries(prs).map(([id,pr])=>({ id, name: findExNameById(id), ...pr, pinned: pins.includes(id) }));
+  if (!entries.length){
+    cont.innerHTML = `<div class="empty">Aún no hay récords — apunta pesos en tus ejercicios y aparecerán aquí</div>`;
+    return;
+  }
+  entries.sort((a,b)=> (b.pinned - a.pinned) || b.date.localeCompare(a.date));
+  cont.innerHTML = `<div class="card">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:4px">RÉCORD PERSONAL POR EJERCICIO</div>
+    <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim);margin-bottom:10px">Toca la ⭐ para elegir los que se ven en Inicio</div>
+    ${entries.map(e=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)">
+        <div onclick="togglePrPin('${e.id}')" style="font-size:16px;cursor:pointer;flex-shrink:0;opacity:${e.pinned?1:.35}">${e.pinned?'⭐':'☆'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:var(--serif);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.08em;margin-top:2px">${fmtDate(e.date)}${e.reps?` · ${e.reps} reps`:''}</div>
+        </div>
+        <div style="font-family:var(--display);font-size:22px;color:var(--accent);flex-shrink:0">${e.kg}<span style="font-family:var(--mono);font-size:10px;color:var(--ink-dim)">kg</span></div>
+      </div>`).join('')}
+  </div>`;
 }
 
 function renderSavedGymData(dStr){
@@ -2087,15 +2176,14 @@ const MEAL_SLOTS = [
 
 function getRecipeById(id){ return getAllRecipes().find(r=>r.id===id) || null; }
 
-// Hábitos diarios marcables desde el plan semanal.
+// Hábitos diarios marcables en cada día del plan semanal (se guardan por fecha).
 // La creatina comparte id con "Suplementos hoy" (Recetas): marcarla aquí la marca allí.
 const DAILY_HABITS = [
-  { id:'agua',     name:'Beber 2L de agua', detail:'Repartidos durante el día', icon:'💧' },
-  { id:'creatina', name:'Creatina',         detail:'1 cazo pequeño · da igual la hora', icon:'C' },
+  { id:'agua',     short:'2L AGUA',  icon:'💧' },
+  { id:'creatina', short:'CREATINA', icon:'C·' },
 ];
 
-function toggleDailyHabit(id){
-  const dStr = todayStr();
+function toggleHabitDay(dStr, id){
   if (!state.supplementsLog[dStr]) state.supplementsLog[dStr] = {};
   state.supplementsLog[dStr][id] = !state.supplementsLog[dStr][id];
   saveState();
@@ -2107,14 +2195,8 @@ function renderMealPlan(){
   if (!wrap) return;
   if (!state.mealPlan) state.mealPlan = {};
   const todayIdx = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
-  const hlog = state.supplementsLog[todayStr()] || {};
-  let html = `<div class="section-label">Hábitos de hoy</div>` + DAILY_HABITS.map(h=>`
-    <div class="suppl-card ${hlog[h.id]?'done':''}" onclick="toggleDailyHabit('${h.id}')">
-      <div class="suppl-icon">${h.icon}</div>
-      <div class="suppl-info"><div class="suppl-name">${h.name}</div><div class="suppl-detail">${h.detail}</div></div>
-      <div class="check-mark ${hlog[h.id]?'checked':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
-    </div>`).join('');
-  html += `<div class="section-label" style="margin-top:24px">Plan semanal de comidas</div>`;
+  const weekMonday = getCurrentMonday();
+  let html = `<div class="section-label">Plan semanal de comidas</div>`;
   DIAS_KEYS.forEach((dk,i)=>{
     const isToday = i===todayIdx;
     const dayPlan = state.mealPlan[dk] || {};
@@ -2130,12 +2212,19 @@ function renderMealPlan(){
         ${r?`<div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);flex-shrink:0;margin-left:8px">${r.kcal} kcal</div>`:`<div style="font-family:var(--mono);font-size:14px;color:var(--ink-faint);flex-shrink:0;margin-left:8px">+</div>`}
       </div>`;
     }).join('');
+    const dayDate = new Date(weekMonday); dayDate.setDate(weekMonday.getDate()+i);
+    const dayStr = dateToStr(dayDate);
+    const hl = state.supplementsLog[dayStr] || {};
+    const habitChips = `<div style="display:flex;gap:6px;margin-top:10px">
+      ${DAILY_HABITS.map(h=>`<div onclick="toggleHabitDay('${dayStr}','${h.id}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid ${hl[h.id]?'var(--green)':'var(--line)'};border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:${hl[h.id]?'var(--green)':'var(--ink-faint)'}">${h.icon} ${h.short}${hl[h.id]?' ✓':''}</div>`).join('')}
+    </div>`;
     html += `<div class="card" style="margin-bottom:10px${isToday?';border-left:3px solid var(--accent)':''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div style="font-family:var(--display);font-size:16px">${DIAS_LABELS[i]}${isToday?' · HOY':''}</div>
         ${dayKcal?`<div style="font-family:var(--mono);font-size:10px;color:var(--accent)">≈ ${dayKcal} kcal</div>`:''}
       </div>
       ${slots}
+      ${habitChips}
     </div>`;
   });
   wrap.innerHTML = html;
@@ -2721,6 +2810,7 @@ function renderProgress(){
   const cont = document.getElementById('progress-content');
   document.querySelectorAll('.pill[data-prog]').forEach(p=>p.classList.toggle('active', p.dataset.prog===progressView));
   if (progressView==='sessions') renderProgressSessions(cont);
+  else if (progressView==='prs') renderProgressPRs(cont);
   else if (progressView==='exercises') renderProgressExercises(cont);
   else if (progressView==='football' || progressView==='cardio_all') renderProgressCardio(cont);
 }
