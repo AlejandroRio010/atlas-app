@@ -287,13 +287,13 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <div class="panel" id="panel-food">
 <!-- inner tab bar -->
 <div style="display:flex;gap:6px;margin-bottom:16px">
-  <button class="nut-tab active" id="ntab-hoy" onclick="switchFoodTab('hoy')">Hoy</button>
+  <button class="nut-tab active" id="ntab-plan" onclick="switchFoodTab('plan')">Plan semanal</button>
   <button class="nut-tab" id="ntab-recetas" onclick="switchFoodTab('recetas')">Recetas</button>
 </div>
 
-<!-- HOY: tracker dinámico -->
-<div id="food-view-hoy">
-  <div id="nut-tracker-wrap"></div>
+<!-- PLAN SEMANAL: desayunos, comidas, meriendas y cenas con las recetas -->
+<div id="food-view-plan">
+  <div id="meal-plan-wrap"></div>
 </div>
 
 <!-- RECETAS: contenido existente -->
@@ -419,9 +419,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <nav class="tabs"><div class="tabs-inner">
 <button class="tab active" data-panel="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Inicio</button>
 <button class="tab" data-panel="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6.5 6.5h11v11h-11z"/><path d="M2 9.5v5M22 9.5v5M6.5 12H4M20 12h-2.5"/></svg>Gym</button>
-<!-- Comida: oculta temporalmente a petición del usuario (2026-07-13). Para reactivar, descomentar este botón.
 <button class="tab" data-panel="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/></svg>Comida</button>
--->
 <button class="tab" data-panel="rutina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/></svg>Rutina</button>
 <button class="tab" data-panel="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>Progreso</button>
 <button class="tab" data-panel="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
@@ -775,6 +773,7 @@ let state = {
   nutritionProfile: null,
   nutrition: {},
   nutritionFavs: [],
+  mealPlan: {},
   lumbar: { startDate: null, baseline: null, changes: [], logs: {} },
 };
 let progressView = 'sessions';
@@ -1826,10 +1825,12 @@ function _nobFinish(){
 
 // ── NUTRITION TRACKER ────────────────────────────────────────────────────────
 function switchFoodTab(tab){
-  ['hoy','recetas'].forEach(t=>{
+  if (tab==='hoy') tab='plan'; // tracker de kcal oculto — la vista Hoy redirige al plan semanal
+  ['plan','recetas'].forEach(t=>{
     document.getElementById('ntab-'+t).classList.toggle('active',t===tab);
     document.getElementById('food-view-'+t).style.display=t===tab?'':'none';
   });
+  if(tab==='plan'){ renderMealPlan(); }
   if(tab==='recetas'){
     // render supplements + recipes in recetas tab
     const dStr=todayStr();
@@ -2081,22 +2082,82 @@ function _nutCommitFood(entry,meal){
 }
 
 function renderFood(){
-  _nutVd = _nutVd || null;
-  if(!state.nutritionProfile){
-    document.getElementById('nut-tracker-wrap').innerHTML=`<div class="card" style="text-align:center;padding:32px 20px">
-      <div style="font-size:32px;margin-bottom:12px">🥗</div>
-      <div style="font-family:var(--display);font-size:22px;letter-spacing:.04em;margin-bottom:8px">Configura tu nutrición</div>
-      <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);line-height:1.5;margin-bottom:20px">Responde 4 preguntas rápidas para calcular tus calorías objetivo y rangos de macros personalizados.</div>
-      <button onclick="startNutOb(false)" style="background:var(--accent);color:#fff;border:none;padding:14px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;cursor:pointer">CONFIGURAR AHORA →</button>
-    </div>`;
-    return;
-  }
-  renderNutTracker();
+  switchFoodTab('plan');
 }
 
 function setRecipeFilter(f){ state.recipeFilter = f; saveState(); switchFoodTab('recetas'); }
 
-function setRecipeFilter(f){ state.recipeFilter = f; saveState(); renderFood(); }
+// ── Plan semanal de comidas ──
+const MEAL_SLOTS = [
+  { k:'des', label:'Desayuno', type:'desayuno' },
+  { k:'com', label:'Comida',   type:'comida' },
+  { k:'mer', label:'Merienda', type:'merienda' },
+  { k:'cen', label:'Cena',     type:'cena' },
+];
+
+function getRecipeById(id){ return getAllRecipes().find(r=>r.id===id) || null; }
+
+function renderMealPlan(){
+  const wrap = document.getElementById('meal-plan-wrap');
+  if (!wrap) return;
+  if (!state.mealPlan) state.mealPlan = {};
+  const todayIdx = (todayDayOfWeek()===0 ? 6 : todayDayOfWeek()-1);
+  let html = `<div class="section-label">Plan semanal de comidas</div>`;
+  DIAS_KEYS.forEach((dk,i)=>{
+    const isToday = i===todayIdx;
+    const dayPlan = state.mealPlan[dk] || {};
+    let dayKcal = 0;
+    const slots = MEAL_SLOTS.map(s=>{
+      const r = dayPlan[s.k] ? getRecipeById(dayPlan[s.k]) : null;
+      if (r) dayKcal += (r.kcal||0);
+      return `<div onclick="openMealSlot('${dk}','${s.k}')" style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer">
+        <div style="min-width:0;flex:1">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-faint)">${s.label.toUpperCase()}</div>
+          <div style="font-family:var(--serif);font-size:13px;color:${r?'var(--ink)':'var(--ink-faint)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r ? r.name : '— Elegir receta'}</div>
+        </div>
+        ${r?`<div style="font-family:var(--mono);font-size:10px;color:var(--ink-dim);flex-shrink:0;margin-left:8px">${r.kcal} kcal</div>`:`<div style="font-family:var(--mono);font-size:14px;color:var(--ink-faint);flex-shrink:0;margin-left:8px">+</div>`}
+      </div>`;
+    }).join('');
+    html += `<div class="card" style="margin-bottom:10px${isToday?';border-left:3px solid var(--accent)':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-family:var(--display);font-size:16px">${DIAS_LABELS[i]}${isToday?' · HOY':''}</div>
+        ${dayKcal?`<div style="font-family:var(--mono);font-size:10px;color:var(--accent)">≈ ${dayKcal} kcal</div>`:''}
+      </div>
+      ${slots}
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function openMealSlot(dk, slotK){
+  const slot = MEAL_SLOTS.find(s=>s.k===slotK);
+  if (!slot) return;
+  const cur = (state.mealPlan && state.mealPlan[dk] && state.mealPlan[dk][slotK]) || null;
+  const recipes = getAllRecipes().filter(r=>r.type===slot.type);
+  const dayLabel = DIAS_LABELS[DIAS_KEYS.indexOf(dk)];
+  let h = `<div class="modal-title">${slot.label.toUpperCase()}</div><div class="modal-sub">${dayLabel} · elige receta</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:50vh;overflow-y:auto">`;
+  recipes.forEach(r=>{
+    h += `<button class="btn ${r.id===cur?'btn-primary':'btn-secondary'}" style="text-align:left;display:flex;justify-content:space-between;gap:8px;align-items:center" onclick="setMealSlot('${dk}','${slotK}','${r.id}')">
+      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span><span style="flex-shrink:0;font-family:var(--mono);font-size:10px">${r.kcal} kcal</span></button>`;
+  });
+  if (!recipes.length) h += `<div class="empty" style="padding:12px">No hay recetas de este tipo — añade una en la pestaña Recetas</div>`;
+  h += `</div>`;
+  if (cur) h += `<button class="btn btn-danger" style="width:100%;margin-bottom:8px" onclick="setMealSlot('${dk}','${slotK}',null)">Quitar del plan</button>`;
+  h += `<button class="btn btn-secondary" style="width:100%" onclick="closeModal()">Cancelar</button>`;
+  document.getElementById('modal-content').innerHTML = h;
+  document.getElementById('modal-bg').classList.add('active');
+}
+
+function setMealSlot(dk, slotK, recipeId){
+  if (!state.mealPlan) state.mealPlan = {};
+  if (!state.mealPlan[dk]) state.mealPlan[dk] = {};
+  if (recipeId) state.mealPlan[dk][slotK] = recipeId;
+  else delete state.mealPlan[dk][slotK];
+  saveState();
+  closeModal();
+  renderMealPlan();
+}
 
 function toggleSupplement(id){
   const dStr = todayStr();
