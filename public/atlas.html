@@ -356,7 +356,8 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
   </div>
   <div id="perfil-pw-msg" style="font-family:var(--mono);font-size:11px;margin-top:8px;min-height:16px"></div>
 </div>
-<div class="card" style="margin-bottom:24px" id="perfil-nut-card">
+<!-- Nutrición oculta temporalmente (quitar display:none para reactivar) -->
+<div class="card" style="margin-bottom:24px;display:none" id="perfil-nut-card">
   <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:10px">NUTRICIÓN</div>
   <div id="perfil-nut-info" style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-bottom:12px;line-height:1.5"></div>
   <button onclick="startNutOb(true)" style="width:100%;background:var(--bg-elev-2);border:1px solid var(--line);color:var(--ink);padding:10px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer" id="perfil-nut-btn">CONFIGURAR NUTRICIÓN</button>
@@ -418,7 +419,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;margin-bo
 <nav class="tabs"><div class="tabs-inner">
 <button class="tab active" data-panel="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Inicio</button>
 <button class="tab" data-panel="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6.5 6.5h11v11h-11z"/><path d="M2 9.5v5M22 9.5v5M6.5 12H4M20 12h-2.5"/></svg>Gym</button>
+<!-- Comida: oculta temporalmente a petición del usuario (2026-07-13). Para reactivar, descomentar este botón.
 <button class="tab" data-panel="food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/></svg>Comida</button>
+-->
 <button class="tab" data-panel="rutina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/></svg>Rutina</button>
 <button class="tab" data-panel="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18M7 14l4-4 4 4 5-5"/></svg>Progreso</button>
 <button class="tab" data-panel="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</button>
@@ -807,7 +810,6 @@ function loadState(){
       try { localStorage.setItem(_CACHE_KEY, JSON.stringify(state)); } catch(e){}
       renderHeader(); renderDashboard(); renderWorkout();
       lmbGateInit();
-      if(!state.nutritionProfile) startNutOb(false);
     }
   }).catch(()=>{});
 }
@@ -915,21 +917,9 @@ function renderHeader(){
 }
 
 function renderDashboard(){
+  // Banner de nutrición oculto temporalmente junto con la pestaña Comida
   const notifyEl = document.getElementById('nut-notify');
-  if(notifyEl){
-    if(!state.nutritionProfile){
-      notifyEl.innerHTML=`<div onclick="startNutOb(false)" style="display:flex;align-items:center;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:4px;padding:12px 14px;margin-bottom:16px;cursor:pointer">
-        <span style="font-size:22px;flex-shrink:0">🥗</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent)">NUEVO · SEGUIMIENTO NUTRICIONAL</div>
-          <div style="font-family:var(--serif);font-size:13px;color:var(--ink-dim);margin-top:2px">Configura tus calorías y macros en 2 minutos</div>
-        </div>
-        <span style="font-family:var(--mono);font-size:16px;color:var(--accent)">→</span>
-      </div>`;
-    } else {
-      notifyEl.innerHTML='';
-    }
-  }
+  if(notifyEl) notifyEl.innerHTML='';
   const legEl = document.getElementById('legacy-recover');
   if (legEl){
     const legacy = findLegacyWeights();
