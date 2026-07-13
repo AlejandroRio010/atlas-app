@@ -1592,15 +1592,15 @@ function renderProgressPRs(cont){
   entries.sort((a,b)=> (b.pinned - a.pinned) || b.date.localeCompare(a.date));
   cont.innerHTML = `<div class="card">
     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint);margin-bottom:4px">RÉCORD PERSONAL POR EJERCICIO</div>
-    <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim);margin-bottom:10px">Toca la ⭐ para elegir los que se ven en Inicio</div>
+    <div style="font-family:var(--serif);font-size:12px;color:var(--ink-dim);margin-bottom:10px">Se calculan solos con tus entrenos. Pulsa FIJAR en los que quieras ver en Inicio.</div>
     ${entries.map(e=>`
       <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)">
-        <div onclick="togglePrPin('${e.id}')" style="font-size:16px;cursor:pointer;flex-shrink:0;opacity:${e.pinned?1:.35}">${e.pinned?'⭐':'☆'}</div>
         <div style="flex:1;min-width:0">
           <div style="font-family:var(--serif);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.name}</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--ink-faint);letter-spacing:.08em;margin-top:2px">${fmtDate(e.date)}${e.reps?` · ${e.reps} reps`:''}</div>
         </div>
         <div style="font-family:var(--display);font-size:22px;color:var(--accent);flex-shrink:0">${e.kg}<span style="font-family:var(--mono);font-size:10px;color:var(--ink-dim)">kg</span></div>
+        <button onclick="togglePrPin('${e.id}')" style="flex-shrink:0;padding:7px 9px;background:${e.pinned?'var(--accent)':'none'};border:1px solid ${e.pinned?'var(--accent)':'var(--line)'};border-radius:3px;font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:${e.pinned?'#fff':'var(--ink-faint)'};cursor:pointer">${e.pinned?'⭐ EN INICIO':'FIJAR'}</button>
       </div>`).join('')}
   </div>`;
 }
@@ -2637,7 +2637,9 @@ function _rwStep2(){
     </div>`;
   }
 
-  document.getElementById('modal-bg').classList.add('wizard-mode');
+  const _mb = document.getElementById('modal-bg');
+  _mb.classList.add('wizard-mode');
+  _mb.classList.add('active'); // imprescindible al entrar directo desde EDITAR (sin pasar por el paso 1)
   document.getElementById('modal-content').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
       <div style="font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--ink-faint)">${_rw.nombre.toUpperCase()} · DÍA ${cur+1} DE ${total}</div>
